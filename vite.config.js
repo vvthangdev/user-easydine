@@ -7,6 +7,7 @@ export default defineConfig({
   base: "/user/", // Đặt base URL là /user/
   server: {
     host: "0.0.0.0", // Bind tới tất cả giao diện mạng
+    allowedHosts: 'all',
     port: 3100, // Đảm bảo cổng đúng
   },
 });
