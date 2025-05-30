@@ -22,6 +22,8 @@ jobs:
 
       # Build frontend
       - name: Build Frontend
+        env:
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
         run: |
           npm install
           npm run build
