@@ -1,15 +1,14 @@
 // src/components/Menu.js
 import React, { useState } from 'react';
 import { Box, Typography } from '@mui/material';
-import { Modal, Button, Form, Input, Select } from 'antd';
+import { Modal, Button } from 'antd';
 import MenuViewModel from './MenuViewModel';
 import Sidebar from './Sidebar';
 import MenuItemsDisplay from './MenuItemsDisplay';
 import CartView from './CartView';
 import Header from './Header';
 import BottomNav from './BottomNav';
-
-const { Option } = Select;
+import ItemDetailsModal from './ItemDetailsModal';
 
 const Menu = () => {
   const {
@@ -27,8 +26,10 @@ const Menu = () => {
     filterByCategory,
     addItem,
     showItemDetails,
+    incrementItem,
     closeModal,
     clearCart,
+    createOrder, // Thêm createOrder
   } = MenuViewModel();
 
   const [isCartModalVisible, setIsCartModalVisible] = useState(false);
@@ -58,8 +59,8 @@ const Menu = () => {
         sx={{
           flexGrow: 1,
           ml: { xs: '200px', sm: '250px' },
-          pt: 10, // Padding-top cho header
-          pb: 10, // Padding-bottom cho bottom navigation
+          pt: 10,
+          pb: 10,
           px: 4,
         }}
       >
@@ -76,6 +77,7 @@ const Menu = () => {
             menuItems={menuItems}
             loading={loading}
             showItemDetails={showItemDetails}
+            incrementItem={incrementItem}
           />
         ) : (
           <Typography variant="body1" color="error">
@@ -86,50 +88,14 @@ const Menu = () => {
         <BottomNav selectedItems={selectedItems} onCartClick={handleCartClick} />
       </Box>
 
-      {/* Modal thêm món */}
-      <Modal
-        title={`Thêm ${selectedItem?.name}`}
-        open={isModalVisible}
-        onCancel={closeModal}
-        footer={null}
-      >
-        <Form form={form} onFinish={addItem} layout="vertical">
-          {selectedItem?.sizes.length > 0 && (
-            <Form.Item
-              name="size"
-              label="Kích thước"
-              rules={[{ required: true, message: 'Vui lòng chọn kích thước' }]}
-            >
-              <Select placeholder="Chọn kích thước">
-                {selectedItem.sizes.map((size) => (
-                  <Option key={size._id} value={size.name}>
-                    {size.name} ({size.price.toLocaleString()} VNĐ)
-                  </Option>
-                ))}
-              </Select>
-            </Form.Item>
-          )}
-          <Form.Item
-            name="quantity"
-            label="Số lượng"
-            initialValue={1}
-            rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}
-          >
-            <Input type="number" min={1} />
-          </Form.Item>
-          <Form.Item name="note" label="Ghi chú">
-            <Input.TextArea rows={3} />
-          </Form.Item>
-          <Form.Item>
-            <Button type="primary" htmlType="submit">
-              Thêm món
-            </Button>
-            <Button onClick={closeModal} style={{ marginLeft: 8 }}>
-              Hủy
-            </Button>
-          </Form.Item>
-        </Form>
-      </Modal>
+      {/* Modal chi tiết món */}
+      <ItemDetailsModal
+        isModalVisible={isModalVisible}
+        selectedItem={selectedItem}
+        form={form}
+        addItem={addItem}
+        closeModal={closeModal}
+      />
 
       {/* Modal giỏ hàng */}
       <Modal
@@ -137,15 +103,17 @@ const Menu = () => {
         open={isCartModalVisible}
         onCancel={handleCartModalClose}
         footer={[
-          <Button key="clear" type="danger" onClick={handleClearCart}>
-            Xóa giỏ hàng
-          </Button>,
           <Button key="close" onClick={handleCartModalClose}>
             Đóng
           </Button>,
         ]}
       >
-        <CartView selectedItems={selectedItems} handleClearCart={handleClearCart} />
+        <CartView
+          selectedItems={selectedItems}
+          handleClearCart={handleClearCart}
+          showItemDetails={showItemDetails}
+          createOrder={createOrder} // Truyền createOrder
+        />
       </Modal>
     </Box>
   );
