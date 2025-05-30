@@ -28,7 +28,14 @@ jobs:
         run: |
           npm install
           npm run build
-          ls -la dist  # Kiểm tra build output (Vite sử dụng thư mục dist)
+          ls -la dist
+          cat dist/index.html
+
+      # Kiểm tra file cấu hình trong repository
+      - name: Check Config Files
+        run: |
+          ls -la Dockerfile nginx.conf docker-compose.yml
+          cat nginx.conf
 
       # Copy file cấu hình
       - name: Copy Config Files to Server
@@ -62,9 +69,15 @@ jobs:
               docker network create user-easydine
             fi
 
-            # Chuẩn bị thư mục
+            # Chuẩn bị thư mục và kiểm tra file
             mkdir -p /home/aris/user-easydine
             cd /home/aris/user-easydine
+            ls -la
+            if [ ! -f nginx.conf ]; then
+              echo "Error: nginx.conf not found!"
+              exit 1
+            fi
+            cat nginx.conf
             rm -rf dist
             mkdir -p dist
 
@@ -87,13 +100,16 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd /home/aris/user-easydine
+            ls -la
             docker-compose down
-            docker-compose up -d --build --force-recreate
+            docker-compose build --no-cache
+            docker-compose up -d --force-recreate
             docker image prune -f
+            docker logs user-easydine-frontend
             ls -la dist
 
       # Kiểm tra sức khỏe
       - name: Check Frontend Health
         run: |
           sleep 10
-          curl -f http://${{ secrets.SERVER_IP }}:3100 || exit 1
+          curl -v http://${{ secrets.SERVER_IP }}:3100
