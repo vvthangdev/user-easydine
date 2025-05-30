@@ -1,4 +1,4 @@
-name: Deploy User-EasyDine Frontend to Ubuntu Server
+name: Deploy UserEasyDine Frontend to Ubuntu Server
 
 on:
   push:
@@ -10,26 +10,27 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Checkout source code
+      # Checkout mã nguồn
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Setup Node.js for building frontend
+      # Cài Node.js để build frontend
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: "20.17.0"
 
-      # Build frontend
+      # Build frontend với Vite
       - name: Build Frontend
         env:
           VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+          VITE_MINIO_API_URL: ${{ secrets.VITE_MINIO_API_URL }}
         run: |
           npm install
           npm run build
-          ls -la dist
+          ls -la dist  # Kiểm tra output build của Vite
 
-      # Deploy via SSH
+      # Deploy qua SSH với password
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
@@ -37,7 +38,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # Check and load nginx:alpine3.20 if needed
+            # Kiểm tra và load nginx:alpine3.20
             if ! docker image inspect nginx:alpine3.20 >/dev/null 2>&1; then
               if [ -f /home/aris/nginx-alpine3.20.tar ]; then
                 docker load -i /home/aris/nginx-alpine3.20.tar
@@ -46,28 +47,28 @@ jobs:
               fi
             fi
 
-            # Create admin-easydine network if not exists
-            if ! docker network inspect admin-easydine >/dev/null 2>&1; then
-              docker network create admin-easydine
+            # Tạo network user-easydine
+            if ! docker network inspect user-easydine >/dev/null 2>&1; then
+              docker network create user-easydine
             fi
 
-            # Prepare directory
+            # Chuẩn bị thư mục
+            mkdir -p /home/aris/user-easydine
             cd /home/aris/user-easydine
-            git pull origin main
             rm -rf dist
             mkdir -p dist
 
-      # Copy build files to server
+      # Sao chép thư mục dist
       - name: Copy Build to Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          source: "dist/"
+          source: "./dist/*"
           target: "/home/aris/user-easydine/dist"
 
-      # Run Docker Compose
+      # Chạy Docker Compose
       - name: Run Docker Compose
         uses: appleboy/ssh-action@master
         with:
@@ -76,26 +77,13 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd /home/aris/user-easydine
-            docker-compose down --remove-orphans
+            docker-compose down
             docker-compose up -d --build --force-recreate
             docker image prune -f
-            
-            # Wait for container to be ready
-            echo "Waiting for container to start..."
-            sleep 15
-            
-            # Check container status
-            docker ps | grep user-easydine
-            docker logs user-easydine --tail 10
+            ls -la dist
 
-      # Health check
+      # Kiểm tra sức khỏe
       - name: Check Frontend Health
         run: |
-          echo "Waiting for service to be fully ready..."
           sleep 10
-          
-          # Test direct port access
-          curl -f http://${{ secrets.SERVER_IP }}:3100/health || echo "Direct port check failed"
-          
-          # Test through nginx reverse proxy
-          curl -f https://vuvanthang.website/user/ || echo "Proxy check failed"
+          curl -f http://${{ secrets.SERVER_IP }}:3100 || exit 1

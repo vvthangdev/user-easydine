@@ -1,19 +1,16 @@
 version: '3.8'
-
 services:
-  user-easydine:
+  frontend:
     build:
       context: .
       dockerfile: Dockerfile
-    image: user-easydine:latest
-    container_name: user-easydine
+    image: user-easydine_frontend:latest
+    container_name: frontend
     ports:
       - "3100:3100"
-    restart: unless-stopped
     networks:
-      - admin-easydine
-
+      - user-easydine
 networks:
-  admin-easydine:
-    name: admin-easydine
-    external: true
+  user-easydine:
+    name: user-easydine
+    driver: bridge
