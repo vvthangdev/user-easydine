@@ -13,4 +13,4 @@ services:
 networks:
   user-easydine:
     name: user-easydine
-    driver: bridge
+    external: true
