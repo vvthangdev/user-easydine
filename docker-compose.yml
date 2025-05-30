@@ -1,0 +1,16 @@
+version: '3.8'
+services:
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: user-easydine_frontend:latest
+    container_name: user-easydine-frontend
+    ports:
+      - "3100:3100"
+    networks:
+      - admin-easydine
+networks:
+  admin-easydine:
+    name: admin-easydine
+    external: true

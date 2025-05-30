@@ -1,0 +1,88 @@
+name: Deploy User-EasyDine Frontend to Ubuntu Server
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout mã nguồn
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Cài Node.js để build frontend
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20.17.0"
+
+      # Build frontend
+      - name: Build Frontend
+        env:
+          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
+        run: |
+          npm install
+          npm run build
+          ls -la dist  # Kiểm tra build output
+
+      # Deploy qua SSH với password
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            # Kiểm tra và load nginx:alpine3.20
+            if ! docker image inspect nginx:alpine3.20 >/dev/null 2>&1; then
+              if [ -f /home/aris/nginx-alpine3.20.tar ]; then
+                docker load -i /home/aris/nginx-alpine3.20.tar
+              else
+                docker pull nginx:alpine3.20
+              fi
+            fi
+
+            # Tạo network admin-easydine nếu chưa có
+            if ! docker network inspect admin-easydine >/dev/null 2>&1; then
+              docker network create admin-easydine
+            fi
+
+            # Pull code và chuẩn bị thư mục
+            cd /home/aris/user-easydine
+            git pull origin main
+            rm -rf dist
+            mkdir -p dist
+
+      # Sao chép thư mục dist
+      - name: Copy Build to Server
+        uses: appleboy/scp-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          source: "./dist/*"
+          target: "/home/aris/user-easydine/dist"
+
+      # Chạy Docker Compose
+      - name: Run Docker Compose
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.SERVER_IP }}
+          username: ${{ secrets.SERVER_USERNAME }}
+          password: ${{ secrets.SERVER_PASSWORD }}
+          script: |
+            cd /home/aris/user-easydine
+            docker-compose down
+            docker-compose up -d --build --force-recreate
+            docker image prune -f
+            ls -la dist
+
+      # Kiểm tra sức khỏe
+      - name: Check Frontend Health
+        run: |
+          sleep 30
+          curl -f http://${{ secrets.SERVER_IP }}:3100 || exit 1
