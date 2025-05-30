@@ -14,7 +14,7 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Cài Node.js để build frontend
+      # Cài Node.js
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -22,16 +22,11 @@ jobs:
 
       # Build frontend
       - name: Build Frontend
-        env:
-          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
-          VITE_MINIO_API_URL: ${{ secrets.VITE_MINIO_API_URL }}
         run: |
           npm install
           npm run build
-          ls -la dist
-          cat dist/index.html
 
-      # Deploy qua SSH với password
+      # Deploy qua SSH
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
@@ -39,30 +34,17 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # Cài Git nếu chưa có
-            if ! command -v git &> /dev/null; then
-              sudo apt update
-              sudo apt install -y git
-            fi
-
-            # Chuẩn bị thư mục
             mkdir -p /home/aris/user-easydine
             cd /home/aris/user-easydine
 
-            # Clone hoặc pull repository
-            if [ -d .git ]; then
-              git pull origin main
-            else
-              git clone ${{ secrets.REPO_URL }} .
-            fi
+            # Pull repository
+            git pull origin main
 
             # Kiểm tra file cấu hình
-            ls -la Dockerfile nginx.conf docker-compose.yml
             if [ ! -f nginx.conf ]; then
               echo "Error: nginx.conf not found!"
               exit 1
             fi
-            cat nginx.conf
 
             # Kiểm tra và load nginx:alpine3.20
             if ! docker image inspect nginx:alpine3.20 >/dev/null 2>&1; then
@@ -78,7 +60,7 @@ jobs:
               docker network create user-easydine
             fi
 
-            # Xóa thư mục dist cũ
+            # Xóa và tạo thư mục dist
             rm -rf dist
             mkdir -p dist
 
@@ -101,16 +83,7 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd /home/aris/user-easydine
-            ls -la
             docker-compose down
-            docker-compose build --no-cache
+            docker-compose build
             docker-compose up -d --force-recreate
             docker image prune -f
-            docker logs user-easydine-frontend
-            ls -la dist
-
-      # Kiểm tra sức khỏe
-      - name: Check Frontend Health
-        run: |
-          sleep 10
-          curl -v http://${{ secrets.SERVER_IP }}:3100
