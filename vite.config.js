@@ -7,5 +7,10 @@ export default defineConfig({
   base: "/user/",
   server: {
     port: 3100,
+    host: true, // Allow external connections
+  },
+  build: {
+    outDir: 'dist',
+    assetsDir: 'assets',
   },
 });

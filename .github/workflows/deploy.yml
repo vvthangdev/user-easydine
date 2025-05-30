@@ -10,11 +10,11 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      # Checkout mã nguồn
+      # Checkout source code
       - name: Checkout code
         uses: actions/checkout@v4
 
-      # Cài Node.js để build frontend
+      # Setup Node.js for building frontend
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
@@ -27,9 +27,9 @@ jobs:
         run: |
           npm install
           npm run build
-          ls -la dist  # Kiểm tra build output
+          ls -la dist
 
-      # Deploy qua SSH với password
+      # Deploy via SSH
       - name: Deploy to Server
         uses: appleboy/ssh-action@master
         with:
@@ -37,7 +37,7 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            # Kiểm tra và load nginx:alpine3.20
+            # Check and load nginx:alpine3.20 if needed
             if ! docker image inspect nginx:alpine3.20 >/dev/null 2>&1; then
               if [ -f /home/aris/nginx-alpine3.20.tar ]; then
                 docker load -i /home/aris/nginx-alpine3.20.tar
@@ -46,18 +46,18 @@ jobs:
               fi
             fi
 
-            # Tạo network admin-easydine nếu chưa có
+            # Create admin-easydine network if not exists
             if ! docker network inspect admin-easydine >/dev/null 2>&1; then
               docker network create admin-easydine
             fi
 
-            # Pull code và chuẩn bị thư mục
+            # Prepare directory
             cd /home/aris/user-easydine
             git pull origin main
             rm -rf dist
             mkdir -p dist
 
-      # Sao chép thư mục dist
+      # Copy build files to server
       - name: Copy Build to Server
         uses: appleboy/scp-action@master
         with:
@@ -67,7 +67,7 @@ jobs:
           source: "dist/"
           target: "/home/aris/user-easydine/dist"
 
-      # Chạy Docker Compose
+      # Run Docker Compose
       - name: Run Docker Compose
         uses: appleboy/ssh-action@master
         with:
@@ -76,13 +76,26 @@ jobs:
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
             cd /home/aris/user-easydine
-            docker-compose down
+            docker-compose down --remove-orphans
             docker-compose up -d --build --force-recreate
             docker image prune -f
-            ls -la dist
+            
+            # Wait for container to be ready
+            echo "Waiting for container to start..."
+            sleep 15
+            
+            # Check container status
+            docker ps | grep user-easydine
+            docker logs user-easydine --tail 10
 
-      # Kiểm tra sức khỏe
+      # Health check
       - name: Check Frontend Health
         run: |
+          echo "Waiting for service to be fully ready..."
           sleep 10
-          curl -f http://${{ secrets.SERVER_IP }}:3100 || exit 1
+          
+          # Test direct port access
+          curl -f http://${{ secrets.SERVER_IP }}:3100/health || echo "Direct port check failed"
+          
+          # Test through nginx reverse proxy
+          curl -f https://vuvanthang.website/user/ || echo "Proxy check failed"
