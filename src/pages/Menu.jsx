@@ -1,23 +1,14 @@
-import React from 'react';
-import { message, Input, Modal, Button, Form, Input as AntdInput, Select } from 'antd';
-import {
-  Box,
-  Typography,
-  CircularProgress,
-  Grid,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Paper,
-  Divider,
-  IconButton,
-} from '@mui/material';
-import AddCircleIcon from '@mui/icons-material/AddCircle';
-import { toast } from 'react-toastify';
+// src/components/Menu.js
+import React, { useState } from 'react';
+import { Box, Typography } from '@mui/material';
+import { Modal, Button, Form, Input, Select } from 'antd';
 import MenuViewModel from './MenuViewModel';
+import Sidebar from './Sidebar';
+import MenuItemsDisplay from './MenuItemsDisplay';
+import CartView from './CartView';
+import Header from './Header';
+import BottomNav from './BottomNav';
 
-const { Search } = Input;
 const { Option } = Select;
 
 const Menu = () => {
@@ -32,231 +23,77 @@ const Menu = () => {
     selectedItem,
     tableId,
     form,
-    handleSearch,
-    handleFilterByCategory,
-    handleAddItem,
+    search,
+    filterByCategory,
+    addItem,
     showItemDetails,
-    handleModalClose,
+    closeModal,
+    clearCart,
   } = MenuViewModel();
+
+  const [isCartModalVisible, setIsCartModalVisible] = useState(false);
+
+  const handleClearCart = () => {
+    clearCart();
+    form.resetFields();
+  };
+
+  const handleCartClick = () => {
+    setIsCartModalVisible(true);
+  };
+
+  const handleCartModalClose = () => {
+    setIsCartModalVisible(false);
+  };
 
   return (
     <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      {/* Sidebar danh mục bên trái */}
+      <Sidebar
+        categories={categories}
+        filterCategory={filterCategory}
+        handleFilterByCategory={filterByCategory}
+      />
+
       <Box
         sx={{
-          width: { xs: 200, sm: 250 },
-          backgroundColor: '#fff',
-          boxShadow: '2px 0 5px rgba(0,0,0,0.1)',
-          position: 'fixed',
-          top: 0,
-          bottom: 0,
-          left: 0,
-          overflowY: 'auto',
-          p: 2,
+          flexGrow: 1,
+          ml: { xs: '200px', sm: '250px' },
+          pt: 10, // Padding-top cho header
+          pb: 10, // Padding-bottom cho bottom navigation
+          px: 4,
         }}
       >
-        <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, pl: 1 }}>
-          Danh mục
-        </Typography>
-        <Divider sx={{ mb: 2 }} />
-        <List>
-          <ListItem disablePadding>
-            <ListItemButton
-              selected={filterCategory === 'all'}
-              onClick={() => handleFilterByCategory('all')}
-              sx={{
-                borderRadius: 1,
-                py: 1.5,
-                '&.Mui-selected': {
-                  backgroundColor: '#1976d2',
-                  color: '#fff',
-                  '&:hover': { backgroundColor: '#1565c0' },
-                },
-                '&:hover': { backgroundColor: '#e3f2fd' },
-              }}
-            >
-              <ListItemText primary="Tất cả" />
-            </ListItemButton>
-          </ListItem>
-          {categories.map((category) => (
-            <ListItem key={category._id} disablePadding>
-              <ListItemButton
-                selected={filterCategory === category._id}
-                onClick={() => handleFilterByCategory(category._id)}
-                sx={{
-                  borderRadius: 1,
-                  py: 1.5,
-                  '&.Mui-selected': {
-                    backgroundColor: '#1976d2',
-                    color: '#fff',
-                    '&:hover': { backgroundColor: '#1565c0' },
-                  },
-                  '&:hover': { backgroundColor: '#e3f2fd' },
-                }}
-              >
-                <ListItemText primary={category.name} />
-              </ListItemButton>
-            </ListItem>
-          ))}
-        </List>
-      </Box>
-
-      {/* Nội dung chính bên phải */}
-      <Box sx={{ flexGrow: 1, ml: { xs: '200px', sm: '250px' }, p: 4 }}>
-        <Typography variant="h4" gutterBottom sx={{ fontWeight: 'bold', color: '#333' }}>
-          Menu cho bàn {tableId}
-        </Typography>
+        <Header
+          tableId={tableId}
+          searchTerm={searchTerm}
+          handleSearch={search}
+          selectedItems={selectedItems}
+          onCartClick={handleCartClick}
+        />
 
         {tableId ? (
-          <>
-            {/* Thanh tìm kiếm */}
-            <Box sx={{ mb: 4, maxWidth: 400 }}>
-              <Search
-                placeholder="Tìm kiếm món ăn"
-                onSearch={handleSearch}
-                onChange={(e) => handleSearch(e.target.value)}
-                value={searchTerm}
-                allowClear
-                style={{ width: '100%' }}
-              />
-            </Box>
-
-            {/* Danh sách món ăn */}
-            {loading ? (
-              <Box sx={{ display: 'flex', justifyContent: 'center', my: 4 }}>
-                <CircularProgress />
-              </Box>
-            ) : menuItems.length > 0 ? (
-              <Grid container spacing={3}>
-                {menuItems.map((item) => (
-                  <Grid item xs={12} sm={6} key={item._id}>
-                    <Paper
-                      elevation={2}
-                      sx={{
-                        borderRadius: 2,
-                        overflow: 'hidden',
-                        transition: 'transform 0.2s',
-                        '&:hover': {
-                          transform: 'scale(1.02)',
-                          boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-                        },
-                        width: '100%',
-                        maxWidth: 400,
-                        height: 400,
-                        display: 'flex',
-                        flexDirection: 'column',
-                      }}
-                    >
-                      <Box sx={{ height: 200, overflow: 'hidden' }}>
-                        <img
-                          src={item.image}
-                          alt={item.name}
-                          style={{
-                            width: '100%',
-                            height: '100%',
-                            objectFit: 'cover',
-                          }}
-                          onError={(e) => {
-                            e.target.src = 'https://via.placeholder.com/200';
-                          }}
-                        />
-                      </Box>
-                      <Box
-                        sx={{
-                          p: 2,
-                          flexGrow: 1,
-                          display: 'flex',
-                          flexDirection: 'column',
-                          justifyContent: 'space-between',
-                        }}
-                      >
-                        <Box>
-                          <Typography
-                            variant="h6"
-                            sx={{
-                              fontWeight: 'bold',
-                              overflow: 'hidden',
-                              textOverflow: 'ellipsis',
-                              whiteSpace: 'nowrap',
-                            }}
-                          >
-                            {item.name}
-                          </Typography>
-                          <Typography
-                            variant="body2"
-                            sx={{ fontWeight: 'bold', color: '#d32f2f' }}
-                          >
-                            Giá: {item.price.toLocaleString()} VNĐ
-                          </Typography>
-                          {item.sizes && item.sizes.length > 0 && (
-                            <>
-                              <Typography variant="body2" sx={{ mt: 1 }}>
-                                Kích thước:
-                              </Typography>
-                              {item.sizes.map((size, index) => (
-                                <Typography variant="body2" key={size._id}>
-                                  {size.name} ({size.price.toLocaleString()} VNĐ)
-                                  {index < item.sizes.length - 1 ? ', ' : ''}
-                                </Typography>
-                              ))}
-                            </>
-                          )}
-                          <Typography variant="body2" sx={{ mt: 1 }}>
-                            Danh mục:{' '}
-                            {item.categories.length > 0
-                              ? item.categories.map((cat) => cat.name).join(', ')
-                              : 'Không có'}
-                          </Typography>
-                          {item.description && (
-                            <Typography
-                              variant="body2"
-                              sx={{
-                                mt: 1,
-                                color: '#555',
-                                overflow: 'hidden',
-                                textOverflow: 'ellipsis',
-                                display: '-webkit-box',
-                                WebkitLineClamp: 2,
-                                WebkitBoxOrient: 'vertical',
-                              }}
-                            >
-                              Mô tả: {item.description}
-                            </Typography>
-                          )}
-                        </Box>
-                        <Box sx={{ display: 'flex', justifyContent: 'flex-end' }}>
-                          <IconButton
-                            color="primary"
-                            onClick={() => showItemDetails(item)}
-                            sx={{ fontSize: '2rem' }}
-                          >
-                            <AddCircleIcon fontSize="inherit" />
-                          </IconButton>
-                        </Box>
-                      </Box>
-                    </Paper>
-                  </Grid>
-                ))}
-              </Grid>
-            ) : (
-              <Typography variant="body1">Không tìm thấy món ăn nào.</Typography>
-            )}
-          </>
+          <MenuItemsDisplay
+            menuItems={menuItems}
+            loading={loading}
+            showItemDetails={showItemDetails}
+          />
         ) : (
           <Typography variant="body1" color="error">
             Không tìm thấy thông tin bàn. Vui lòng truy cập lại.
           </Typography>
         )}
+
+        <BottomNav selectedItems={selectedItems} onCartClick={handleCartClick} />
       </Box>
 
-      {/* Modal chọn món */}
+      {/* Modal thêm món */}
       <Modal
         title={`Thêm ${selectedItem?.name}`}
         open={isModalVisible}
-        onCancel={handleModalClose}
+        onCancel={closeModal}
         footer={null}
       >
-        <Form form={form} onFinish={handleAddItem} layout="vertical">
+        <Form form={form} onFinish={addItem} layout="vertical">
           {selectedItem?.sizes.length > 0 && (
             <Form.Item
               name="size"
@@ -278,20 +115,37 @@ const Menu = () => {
             initialValue={1}
             rules={[{ required: true, message: 'Vui lòng nhập số lượng' }]}
           >
-            <AntdInput type="number" min={1} />
+            <Input type="number" min={1} />
           </Form.Item>
           <Form.Item name="note" label="Ghi chú">
-            <AntdInput.TextArea rows={3} />
+            <Input.TextArea rows={3} />
           </Form.Item>
           <Form.Item>
             <Button type="primary" htmlType="submit">
               Thêm món
             </Button>
-            <Button onClick={handleModalClose} style={{ marginLeft: 8 }}>
+            <Button onClick={closeModal} style={{ marginLeft: 8 }}>
               Hủy
             </Button>
           </Form.Item>
         </Form>
+      </Modal>
+
+      {/* Modal giỏ hàng */}
+      <Modal
+        title="Giỏ hàng"
+        open={isCartModalVisible}
+        onCancel={handleCartModalClose}
+        footer={[
+          <Button key="clear" type="danger" onClick={handleClearCart}>
+            Xóa giỏ hàng
+          </Button>,
+          <Button key="close" onClick={handleCartModalClose}>
+            Đóng
+          </Button>,
+        ]}
+      >
+        <CartView selectedItems={selectedItems} handleClearCart={handleClearCart} />
       </Modal>
     </Box>
   );

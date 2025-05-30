@@ -1,10 +1,11 @@
+// src/viewModels/MenuViewModel.js
 import { useEffect, useState, useCallback } from 'react';
 import { message, Form } from 'antd';
 import { itemAPI } from '../services/apis/Item';
 import { toast } from 'react-toastify';
 import { debounce } from 'lodash';
 
-const useMenuViewModel = () => {
+const MenuViewModel = () => {
   const [menuItems, setMenuItems] = useState([]);
   const [categories, setCategories] = useState([]);
   const [selectedItems, setSelectedItems] = useState([]);
@@ -16,7 +17,6 @@ const useMenuViewModel = () => {
   const tableId = localStorage.getItem('tableId');
   const [form] = Form.useForm();
 
-  // Hàm lấy danh sách danh mục
   const fetchCategories = async () => {
     try {
       const categoriesData = await itemAPI.getAllCategories();
@@ -28,7 +28,6 @@ const useMenuViewModel = () => {
     }
   };
 
-  // Hàm lấy danh sách món ăn
   const fetchMenuItems = useCallback(async (search = '', category = null) => {
     if (!tableId) {
       message.error('Không tìm thấy ID bàn');
@@ -55,7 +54,6 @@ const useMenuViewModel = () => {
     }
   }, [tableId]);
 
-  // Debounce tìm kiếm
   const debouncedFetchMenuItems = useCallback(
     debounce((search, category) => {
       fetchMenuItems(search, category);
@@ -63,21 +61,18 @@ const useMenuViewModel = () => {
     [fetchMenuItems]
   );
 
-  // Xử lý tìm kiếm
-  const handleSearch = (value) => {
+  const search = (value) => {
     setSearchTerm(value);
     debouncedFetchMenuItems(value, filterCategory);
   };
 
-  // Lọc theo danh mục
-  const handleFilterByCategory = (categoryId) => {
+  const filterByCategory = (categoryId) => {
     setFilterCategory(categoryId);
-    setSearchTerm(''); // Reset searchTerm khi chọn danh mục
+    setSearchTerm('');
     fetchMenuItems('', categoryId);
   };
 
-  // Thêm món vào danh sách chọn
-  const handleAddItem = (values) => {
+  const addItem = (values) => {
     const itemData = {
       id: selectedItem.id,
       name: selectedItem.name,
@@ -108,7 +103,6 @@ const useMenuViewModel = () => {
     toast.success(`Đã thêm ${itemData.name} vào danh sách`);
   };
 
-  // Hiển thị modal chi tiết món
   const showItemDetails = (item) => {
     setSelectedItem({
       id: item._id,
@@ -119,14 +113,17 @@ const useMenuViewModel = () => {
     setIsModalVisible(true);
   };
 
-  // Đóng modal
-  const handleModalClose = () => {
+  const closeModal = () => {
     setIsModalVisible(false);
     setSelectedItem(null);
     form.resetFields();
   };
 
-  // Khởi tạo dữ liệu
+  const clearCart = () => {
+    setSelectedItems([]);
+    toast.success('Đã xóa giỏ hàng');
+  };
+
   useEffect(() => {
     if (tableId) {
       fetchMenuItems();
@@ -147,12 +144,13 @@ const useMenuViewModel = () => {
     selectedItem,
     tableId,
     form,
-    handleSearch,
-    handleFilterByCategory,
-    handleAddItem,
+    search,
+    filterByCategory,
+    addItem,
     showItemDetails,
-    handleModalClose,
+    closeModal,
+    clearCart,
   };
 };
 
-export default useMenuViewModel;
+export default MenuViewModel;
