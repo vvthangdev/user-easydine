@@ -1,4 +1,4 @@
-name: Deploy UserEasyDine Frontend to Ubuntu Server
+name: Deploy EasyDine Frontend to Ubuntu Server
 
 on:
   push:
@@ -20,15 +20,16 @@ jobs:
         with:
           node-version: "20.17.0"
 
-      # Build frontend với Vite
+      # Build frontend
       - name: Build Frontend
         env:
-          VITE_BACKEND_URL: ${{ secrets.VITE_BACKEND_URL }}
-          VITE_MINIO_API_URL: ${{ secrets.VITE_MINIO_API_URL }}
+          CI: false
+          REACT_APP_BACKEND_URL: ${{ secrets.REACT_APP_BACKEND_URL }}
+          REACT_APP_MINIO_API_URL: ${{ secrets.REACT_APP_MINIO_API_URL }}
         run: |
           npm install
           npm run build
-          ls -la dist  # Kiểm tra output build của Vite
+          ls -la build  # Kiểm tra build output
 
       # Deploy qua SSH với password
       - name: Deploy to Server
@@ -47,26 +48,26 @@ jobs:
               fi
             fi
 
-            # Tạo network user-easydine
-            if ! docker network inspect user-easydine >/dev/null 2>&1; then
-              docker network create user-easydine
+            # Tạo network admin-easydine
+            if ! docker network inspect admin-easydine >/dev/null 2>&1; then
+              docker network create admin-easydine
             fi
 
-            # Chuẩn bị thư mục
-            mkdir -p /home/aris/user-easydine
-            cd /home/aris/user-easydine
-            rm -rf dist
-            mkdir -p dist
+            # Pull code và chuẩn bị thư mục
+            cd /home/aris/admin-easydine
+            git pull origin main
+            rm -rf build
+            mkdir -p build
 
-      # Sao chép thư mục dist
+      # Sao chép thư mục build
       - name: Copy Build to Server
         uses: appleboy/scp-action@master
         with:
           host: ${{ secrets.SERVER_IP }}
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
-          source: "./dist/*"
-          target: "/home/aris/user-easydine/dist"
+          source: "./build/*"
+          target: "/home/aris/admin-easydine/build"
 
       # Chạy Docker Compose
       - name: Run Docker Compose
@@ -76,14 +77,14 @@ jobs:
           username: ${{ secrets.SERVER_USERNAME }}
           password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            cd /home/aris/user-easydine
+            cd /home/aris/admin-easydine
             docker-compose down
             docker-compose up -d --build --force-recreate
             docker image prune -f
-            ls -la dist
+            ls -la build
 
       # Kiểm tra sức khỏe
       - name: Check Frontend Health
         run: |
           sleep 10
-          curl -f http://${{ secrets.SERVER_IP }}:3100 || exit 1
+          curl -f http://${{ secrets.SERVER_IP }}:3000 || exit 1
