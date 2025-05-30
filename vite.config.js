@@ -7,4 +7,5 @@ export default defineConfig({
   server: {
     port: 3100,
   },
+  base: '/user/', // Đặt base URL là /user/
 });

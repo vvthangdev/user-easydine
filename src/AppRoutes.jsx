@@ -7,7 +7,7 @@ import MenuRedirect from './components/MenuRedirect';
 function AppRoutes() {
   return (
     <Routes>
-      {/* <Route path="/" element={<MainPage />} /> */}
+      <Route path="/" element={<MainPage />} />
       <Route path="/menu" element={<Menu />} />
       <Route path="/menu/:id" element={<MenuRedirect />} />
     </Routes>
