@@ -1,120 +1,164 @@
-// src/components/Menu.js
-import React, { useState } from 'react';
-import { Box, Typography } from '@mui/material';
-import { Modal, Button } from 'antd';
-import MenuViewModel from './MenuViewModel';
-import Sidebar from './Sidebar';
-import MenuItemsDisplay from './MenuItemsDisplay';
-import CartView from './CartView';
-import Header from './Header';
-import BottomNav from './BottomNav';
-import ItemDetailsModal from './ItemDetailsModal';
+import React, { useState } from "react";
+import { Box, Typography, Dialog, DialogTitle, DialogContent } from "@mui/material";
+import { useAppleStyles } from "../theme/theme-hooks.js";
+import MenuViewModel from "./MenuViewModel.js";
+import Sidebar from "./Sidebar.jsx";
+import Header from "./Header.jsx";
+import MenuItemsDisplay from "./MenuItemsDisplay.jsx";
+import BottomNav from "./BottomNav.jsx";
+import ItemDetailsModal from "./ItemDetailsModal.jsx";
+import CartView from "./CartView.jsx";
+import OrderHistory from "./OrderHistory.jsx";
 
 const Menu = () => {
+  const styles = useAppleStyles();
+  const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
+
   const {
     menuItems,
     categories,
     selectedItems,
+    setSelectedItems,
     loading,
     filterCategory,
     searchTerm,
-    isModalVisible,
+    isItemModalVisible,
+    isCartModalVisible,
     selectedItem,
     tableId,
-    form,
+    tableStatus,
+    orderId,
+    control,
+    handleSubmit,
+    reset,
     search,
     filterByCategory,
-    addItem,
     showItemDetails,
     incrementItem,
-    closeModal,
-    clearCart,
-    createOrder, // Thêm createOrder
+    updateItemQuantity,
+    closeItemModal,
+    openCartModal,
+    closeCartModal,
   } = MenuViewModel();
 
-  const [isCartModalVisible, setIsCartModalVisible] = useState(false);
-
-  const handleClearCart = () => {
-    clearCart();
-    form.resetFields();
+  const openHistoryModal = () => {
+    setIsHistoryModalVisible(true);
   };
 
-  const handleCartClick = () => {
-    setIsCartModalVisible(true);
-  };
-
-  const handleCartModalClose = () => {
-    setIsCartModalVisible(false);
+  const closeHistoryModal = () => {
+    setIsHistoryModalVisible(false);
   };
 
   return (
-    <Box sx={{ display: 'flex', minHeight: '100vh', backgroundColor: '#f5f5f5' }}>
-      <Sidebar
-        categories={categories}
-        filterCategory={filterCategory}
-        handleFilterByCategory={filterByCategory}
+    <Box
+      sx={{
+        display: "flex",
+        flexDirection: "column",
+        minHeight: "100vh",
+        background: styles.gradients.light,
+      }}
+    >
+      <Header
+        tableId={tableId}
+        searchTerm={searchTerm}
+        handleSearch={search}
+        selectedItems={selectedItems}
+        onCartClick={openCartModal}
+        onHistoryClick={openHistoryModal}
       />
-
       <Box
         sx={{
+          display: "flex",
           flexGrow: 1,
-          ml: { xs: '200px', sm: '250px' },
-          pt: 10,
-          pb: 10,
-          px: 4,
+          minHeight: 0,
         }}
       >
-        <Header
-          tableId={tableId}
-          searchTerm={searchTerm}
-          handleSearch={search}
-          selectedItems={selectedItems}
-          onCartClick={handleCartClick}
-        />
-
-        {tableId ? (
-          <MenuItemsDisplay
-            menuItems={menuItems}
-            loading={loading}
-            showItemDetails={showItemDetails}
-            incrementItem={incrementItem}
+        {categories && (
+          <Sidebar
+            categories={categories}
+            filterCategory={filterCategory}
+            handleFilterByCategory={filterByCategory}
           />
-        ) : (
-          <Typography variant="body1" color="error">
-            Không tìm thấy thông tin bàn. Vui lòng truy cập lại.
-          </Typography>
         )}
-
-        <BottomNav selectedItems={selectedItems} onCartClick={handleCartClick} />
+        <Box
+          sx={{
+            flexGrow: 1,
+            width: "80%", // 80% chiều rộng
+            pt: styles.spacing(2),
+            pb: styles.spacing(12),
+            px: { xs: styles.spacing(2), sm: styles.spacing(4) },
+          }}
+        >
+          {tableId ? (
+            <MenuItemsDisplay
+              menuItems={menuItems}
+              loading={loading}
+              showItemDetails={showItemDetails}
+              incrementItem={incrementItem}
+            />
+          ) : (
+            <Typography
+              variant="body1"
+              sx={{
+                color: styles.colors.error,
+                fontSize: styles.typography.fontSize.base,
+                textAlign: "center",
+                mt: styles.spacing(8),
+              }}
+            >
+              Không tìm thấy thông tin bàn. Vui lòng truy cập lại.
+            </Typography>
+          )}
+        </Box>
       </Box>
+      <BottomNav selectedItems={selectedItems} onCartClick={openCartModal} />
 
-      {/* Modal chi tiết món */}
       <ItemDetailsModal
-        isModalVisible={isModalVisible}
+        isModalVisible={isItemModalVisible}
         selectedItem={selectedItem}
-        form={form}
-        addItem={addItem}
-        closeModal={closeModal}
+        control={control}
+        handleSubmit={handleSubmit}
+        reset={reset}
+        closeModal={closeItemModal}
       />
 
-      {/* Modal giỏ hàng */}
-      <Modal
-        title="Giỏ hàng"
+      <Dialog
         open={isCartModalVisible}
-        onCancel={handleCartModalClose}
-        footer={[
-          <Button key="close" onClick={handleCartModalClose}>
-            Đóng
-          </Button>,
-        ]}
+        onClose={closeCartModal}
+        PaperProps={{
+          sx: {
+            borderRadius: styles.borderRadius.modal,
+            boxShadow: styles.shadow("2xl"),
+            background: styles.colors.background.paper,
+            maxWidth: "90vw",
+            maxHeight: "90vh",
+          },
+        }}
       >
-        <CartView
-          selectedItems={selectedItems}
-          handleClearCart={handleClearCart}
-          showItemDetails={showItemDetails}
-          createOrder={createOrder} // Truyền createOrder
-        />
-      </Modal>
+        <DialogTitle
+          sx={{
+            background: styles.gradients.primary,
+            color: styles.colors.white,
+            fontWeight: styles.typography.fontWeight.semibold,
+          }}
+        >
+          Giỏ hàng
+        </DialogTitle>
+        <DialogContent>
+          <CartView
+            selectedItems={selectedItems}
+            onItemUpdate={setSelectedItems}
+            onShowDetails={showItemDetails}
+            orderId={orderId}
+          />
+        </DialogContent>
+      </Dialog>
+
+      <OrderHistory
+        tableId={tableId}
+        open={isHistoryModalVisible}
+        onClose={closeHistoryModal}
+      />
     </Box>
   );
 };

@@ -1,70 +1,39 @@
-// src/components/Header.js
-import React, { useState, useEffect } from 'react';
-import { Box, Typography, InputBase, IconButton, Badge } from '@mui/material';
-import SearchIcon from '@mui/icons-material/Search';
-import ShoppingCartIcon from '@mui/icons-material/ShoppingCart';
-import { styled, alpha } from '@mui/material/styles';
-import { toast } from 'react-toastify';
-import { tableAPI } from '../services/apis/Table'; // Import tableAPI
+import React, { useState, useEffect } from "react";
+import { Box, Typography, IconButton, Badge } from "@mui/material";
+import SearchIcon from "@mui/icons-material/Search";
+import ShoppingCartIcon from "@mui/icons-material/ShoppingCart";
+import HistoryIcon from "@mui/icons-material/History";
+import { useAppleStyles } from "../theme/theme-hooks.js";
+import { toast } from "react-toastify";
+import { tableAPI } from "../services/apis/Table";
 
-const Search = styled('div')(({ theme }) => ({
-  position: 'relative',
-  borderRadius: theme.shape.borderRadius,
-  backgroundColor: alpha(theme.palette.common.white, 0.15),
-  '&:hover': {
-    backgroundColor: alpha(theme.palette.common.white, 0.25),
-  },
-  marginRight: theme.spacing(2),
-  marginLeft: 0,
-  width: '100%',
-  [theme.breakpoints.up('sm')]: {
-    marginLeft: theme.spacing(3),
-    width: 'auto',
-  },
-}));
-
-const SearchIconWrapper = styled('div')(({ theme }) => ({
-  padding: theme.spacing(0, 2),
-  height: '100%',
-  position: 'absolute',
-  pointerEvents: 'none',
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-}));
-
-const StyledInputBase = styled(InputBase)(({ theme }) => ({
-  color: 'inherit',
-  '& .MuiInputBase-input': {
-    padding: theme.spacing(1, 1, 1, 0),
-    paddingLeft: `calc(1em + ${theme.spacing(4)})`,
-    transition: theme.transitions.create('width'),
-    width: '100%',
-    [theme.breakpoints.up('md')]: {
-      width: '20ch',
-    },
-  },
-}));
-
-const Header = ({ tableId, searchTerm, handleSearch, selectedItems, onCartClick }) => {
+const Header = ({
+  tableId,
+  searchTerm,
+  handleSearch,
+  selectedItems,
+  onCartClick,
+  onHistoryClick,
+}) => {
+  const styles = useAppleStyles();
   const [tableInfo, setTableInfo] = useState(null);
 
   useEffect(() => {
     const fetchTableInfo = async () => {
       if (!tableId) {
-        toast.error('Không tìm thấy ID bàn');
+        toast.error("Không tìm thấy ID bàn");
         setTableInfo(null);
         return;
       }
 
       try {
         const response = await tableAPI.getTableById({ table_id: tableId });
-        console.log('Table info response:', response); // Debugging
-        setTableInfo(response); // Lưu thông tin bàn
+        console.log("Table info response:", response);
+        setTableInfo(response);
       } catch (error) {
-        console.error('Error fetching table info:', error);
+        console.error("Error fetching table info:", error);
         setTableInfo(null);
-        toast.error(error.message || 'Không thể lấy thông tin bàn');
+        toast.error(error.message || "Không thể lấy thông tin bàn");
       }
     };
 
@@ -74,48 +43,119 @@ const Header = ({ tableId, searchTerm, handleSearch, selectedItems, onCartClick 
   return (
     <Box
       sx={{
-        position: 'fixed',
-        top: 0,
-        left: { xs: '200px', sm: '250px' },
-        right: 0,
-        zIndex: 1000,
-        backgroundColor: '#fff',
-        boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-        p: 2,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
+        width: "100%",
+        background: styles.gradients.light,
+        boxShadow: styles.shadow("sm"),
+        p: { xs: styles.spacing(2), sm: styles.spacing(4) },
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "space-between",
+        zIndex: styles.mui.zIndex.appBar,
       }}
     >
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+      <Box sx={{ display: "flex", alignItems: "center", gap: styles.spacing(2) }}>
         {tableInfo ? (
-          <Typography variant="h6" sx={{ fontWeight: 'bold' }}>
-            Bàn {tableInfo.table_number} ({tableInfo.area}, Sức chứa: {tableInfo.capacity})
+          <Typography
+            variant="h6"
+            sx={{
+              fontWeight: styles.typography.fontWeight.bold,
+              color: styles.colors.text.primary,
+              fontSize: {
+                xs: styles.typography.fontSize.base,
+                sm: styles.typography.fontSize.xl,
+              },
+            }}
+          >
+            Bàn {tableInfo.table_number}
           </Typography>
         ) : (
-          <Typography variant="h6" color="error">
+          <Typography
+            variant="h6"
+            sx={{
+              color: styles.colors.error,
+              fontWeight: styles.typography.fontWeight.semibold,
+              fontSize: {
+                xs: styles.typography.fontSize.base,
+                sm: styles.typography.fontSize.xl,
+              },
+            }}
+          >
             Không tìm thấy thông tin bàn
           </Typography>
         )}
       </Box>
 
-      <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
-        <Search>
-          <SearchIconWrapper>
-            <SearchIcon />
-          </SearchIconWrapper>
-          <StyledInputBase
+      <Box
+        sx={{
+          display: "flex",
+          alignItems: "center",
+          gap: styles.spacing(1),
+        }}
+      >
+        <Box
+          sx={{
+            ...styles.input("search"),
+            display: "flex",
+            alignItems: "center",
+            position: "relative",
+            width: { xs: "50%", sm: "40ch" },
+            mr: styles.spacing(2),
+          }}
+        >
+          <Box
+            sx={{
+              ...styles.iconContainer("primary"),
+              position: "absolute",
+              left: styles.spacing(1),
+              pointerEvents: "none",
+              width: { xs: styles.spacing(8), sm: styles.spacing(12) },
+              height: { xs: styles.spacing(8), sm: styles.spacing(12) },
+            }}
+          >
+            <SearchIcon fontSize="small" />
+          </Box>
+          <input
             placeholder="Tìm món ăn..."
-            inputProps={{ 'aria-label': 'search' }}
             value={searchTerm}
             onChange={(e) => handleSearch(e.target.value)}
+            style={{
+              ...styles.input("search"),
+              width: "100%",
+              paddingLeft: `calc(1em + ${styles.spacing(4)})`,
+              paddingRight: styles.spacing(1),
+              color: styles.colors.text.primary,
+              fontSize: {
+                xs: styles.typography.fontSize.sm,
+                sm: styles.typography.fontSize.base,
+              },
+            }}
           />
-        </Search>
+        </Box>
 
-        <IconButton color="inherit" onClick={onCartClick}>
+        <IconButton
+          onClick={onCartClick}
+          sx={{
+            ...styles.iconContainer("primary"),
+            color: styles.colors.white,
+            width: { xs: styles.spacing(8), sm: styles.spacing(12) },
+            height: { xs: styles.spacing(8), sm: styles.spacing(12) },
+          }}
+        >
           <Badge badgeContent={selectedItems.length} color="error">
-            <ShoppingCartIcon />
+            <ShoppingCartIcon fontSize="small" />
           </Badge>
+        </IconButton>
+
+        <IconButton
+          onClick={onHistoryClick}
+          sx={{
+            ...styles.iconContainer("primary"),
+            color: styles.colors.white,
+            width: { xs: styles.spacing(8), sm: styles.spacing(12) },
+            height: { xs: styles.spacing(8), sm: styles.spacing(12) },
+          }}
+        >
+          <HistoryIcon fontSize="small" />
         </IconButton>
       </Box>
     </Box>

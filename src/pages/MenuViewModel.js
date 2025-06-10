@@ -1,10 +1,9 @@
-// src/viewModels/MenuViewModel.js
-import { useEffect, useState, useCallback } from 'react';
-import { message, Form } from 'antd';
-import { itemAPI } from '../services/apis/Item';
-import { orderAPI } from '../services/apis/Order'; // Import orderAPI
-import { toast } from 'react-toastify';
-import { debounce } from 'lodash';
+import { useEffect, useState, useCallback } from "react";
+import { useForm } from "react-hook-form";
+import { toast } from "react-toastify";
+import { debounce } from "lodash";
+import { itemAPI } from "../services/apis/Item";
+import { tableAPI } from "../services/apis/Table";
 
 const MenuViewModel = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -12,48 +11,81 @@ const MenuViewModel = () => {
   const [selectedItems, setSelectedItems] = useState([]);
   const [loading, setLoading] = useState(false);
   const [filterCategory, setFilterCategory] = useState(null);
-  const [searchTerm, setSearchTerm] = useState('');
-  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isItemModalVisible, setIsItemModalVisible] = useState(false);
+  const [isCartModalVisible, setIsCartModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
-  const tableId = localStorage.getItem('tableId');
-  const [form] = Form.useForm();
+  const [editItemIndex, setEditItemIndex] = useState(null);
+  const [tableStatus, setTableStatus] = useState(null);
+  const [orderId, setOrderId] = useState(null);
+  const tableId = localStorage.getItem("tableId");
+  const { control, handleSubmit, reset, watch } = useForm({
+    defaultValues: { size: "", quantity: 1, note: "" },
+  });
 
   const fetchCategories = async () => {
     try {
       const categoriesData = await itemAPI.getAllCategories();
       setCategories(categoriesData || []);
     } catch (error) {
-      console.error('Error fetching categories:', error);
-      toast.error('Không thể tải danh mục món ăn');
+      console.error("Error fetching categories:", error);
+      toast.error("Không thể tải danh mục món ăn");
       setCategories([]);
     }
   };
 
-  const fetchMenuItems = useCallback(async (search = '', category = null) => {
+  const fetchTableStatus = async () => {
     if (!tableId) {
-      message.error('Không tìm thấy ID bàn');
+      toast.error("Không tìm thấy ID bàn");
       return;
     }
 
-    setLoading(true);
     try {
-      let items;
-      if (search) {
-        items = await itemAPI.searchItem({ name: search });
-      } else if (category && category !== 'all') {
-        items = await itemAPI.filterItemsByCategory(category);
+      const statuses = await tableAPI.getAllTablesStatus();
+      const currentTable = statuses.find((table) => table.table_id === tableId);
+      if (currentTable) {
+        setTableStatus(currentTable.status);
+        setOrderId(currentTable.status === "Occupied" || currentTable.status === "Reserved" ? currentTable.reservation_id : null);
       } else {
-        items = await itemAPI.getAllItem();
+        setTableStatus("Available");
+        setOrderId(null);
       }
-      setMenuItems(items.map(item => ({ ...item, sizes: item.sizes || [] })) || []);
     } catch (error) {
-      console.error('Error fetching menu items:', error);
-      toast.error('Không thể tải danh sách món ăn');
-      setMenuItems([]);
-    } finally {
-      setLoading(false);
+      console.error("Error fetching table status:", error);
+      toast.error("Không thể kiểm tra trạng thái bàn");
+      setTableStatus(null);
+      setOrderId(null);
     }
-  }, [tableId]);
+  };
+
+  const fetchMenuItems = useCallback(
+    async (search = "", category = null) => {
+      if (!tableId) {
+        toast.error("Không tìm thấy ID bàn");
+        return;
+      }
+
+      setLoading(true);
+      try {
+        let items;
+        if (search) {
+          items = await itemAPI.searchItem({ name: search });
+        } else if (category && category !== "all") {
+          items = await itemAPI.filterItemsByCategory(category);
+        } else {
+          items = await itemAPI.getAllItem();
+        }
+        setMenuItems(items.map((item) => ({ ...item, sizes: item.sizes || [] })) || []);
+      } catch (error) {
+        console.error("Error fetching menu items:", error);
+        toast.error("Không thể tải danh sách món ăn");
+        setMenuItems([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [tableId]
+  );
 
   const debouncedFetchMenuItems = useCallback(
     debounce((search, category) => {
@@ -69,143 +101,123 @@ const MenuViewModel = () => {
 
   const filterByCategory = (categoryId) => {
     setFilterCategory(categoryId);
-    setSearchTerm('');
-    fetchMenuItems('', categoryId);
+    setSearchTerm("");
+    fetchMenuItems("", categoryId);
   };
 
-  const addItem = (values, itemData) => {
-    console.log('Adding item with values:', values, 'Item data:', itemData); // Debugging
-    const item = itemData || selectedItem;
-    if (!item) {
-      console.error('No item data available to add');
-      toast.error('Không thể thêm món vào giỏ hàng');
+  const showItemDetails = (item, index = null) => {
+    const itemData =
+      index !== null
+        ? { ...selectedItems[index], sizes: item.sizes || [] }
+        : {
+            id: item._id || item.id,
+            name: item.name,
+            price: item.price,
+            sizes: item.sizes || [],
+          };
+    setSelectedItem(itemData);
+    setEditItemIndex(index);
+    reset({
+      size: itemData.size || (itemData.sizes?.length > 0 ? itemData.sizes[0].name : ""),
+      quantity: itemData.quantity || 1,
+      note: itemData.note || "",
+    });
+    setIsItemModalVisible(true);
+  };
+
+  const addToCart = (data) => {
+    if (!selectedItem) {
+      toast.error("Không thể thêm món vào giỏ hàng");
       return;
     }
 
-    const newItem = {
-      id: item.id,
-      name: item.name,
-      size: values.size || null,
-      price: values.size
-        ? item.sizes.find((s) => s.name === values.size)?.price || item.price
-        : item.price,
-      quantity: values.quantity || 1,
-      note: values.note || '',
+    const { size, quantity, note } = data;
+    const itemToAdd = {
+      id: selectedItem.id,
+      name: selectedItem.name,
+      price: selectedItem.sizes.find((s) => s.name === size)?.price || selectedItem.price,
+      size: size || undefined,
+      quantity: parseInt(quantity, 10) || 1,
+      note: note || "",
     };
 
-    setSelectedItems((prev) => {
-      console.log('Updating selectedItems:', prev, newItem); // Debugging
-      const existingIndex = prev.findIndex(
-        (i) => i.id === newItem.id && i.size === newItem.size
+    if (editItemIndex !== null) {
+      const updatedItems = [...selectedItems];
+      updatedItems[editItemIndex] = itemToAdd;
+      setSelectedItems(updatedItems);
+      toast.success(`Đã cập nhật ${itemToAdd.name} trong giỏ hàng!`);
+    } else {
+      const existingIndex = selectedItems.findIndex(
+        (i) => i.id === itemToAdd.id && i.size === itemToAdd.size
       );
-      if (existingIndex !== -1) {
-        const updatedItems = [...prev];
+      if (existingIndex > -1) {
+        const updatedItems = [...selectedItems];
         updatedItems[existingIndex] = {
           ...updatedItems[existingIndex],
-          quantity: updatedItems[existingIndex].quantity + newItem.quantity,
-          note: newItem.note || updatedItems[existingIndex].note,
+          quantity: updatedItems[existingIndex].quantity + itemToAdd.quantity,
+          note: note || updatedItems[existingIndex].note,
         };
-        return updatedItems;
+        setSelectedItems(updatedItems);
+      } else {
+        setSelectedItems([...selectedItems, itemToAdd]);
       }
-      return [...prev, newItem];
-    });
+      toast.success(`Đã thêm ${itemToAdd.name} vào giỏ hàng!`);
+    }
 
-    setIsModalVisible(false);
-    setSelectedItem(null);
-    form.resetFields();
-    toast.success(`Đã cập nhật ${newItem.name} trong giỏ hàng`);
+    closeItemModal();
   };
 
-  const incrementItem = (item) => {
-    console.log('Incrementing item:', item); // Debugging
-    const itemData = {
-      id: item._id || item.id,
-      name: item.name,
-      price: item.sizes?.length > 0 ? item.sizes[0].price : item.price,
-      sizes: item.sizes || [],
-      size: item.sizes?.length > 0 ? item.sizes[0].name : null,
-    };
-
-    addItem({ quantity: 1, note: '' }, itemData);
-  };
-
-  const showItemDetails = (item) => {
-    const itemData = {
+  const addItemDirectly = (item) => {
+    const itemToAdd = {
       id: item._id || item.id,
       name: item.name,
       price: item.price,
-      sizes: item.sizes || [],
+      quantity: 1,
+      note: "",
     };
-    console.log('showItemDetails called for:', itemData); // Debugging
-    setSelectedItem(itemData);
 
-    // Điền sẵn thông tin vào form
-    form.setFieldsValue({
-      size: item.size || (itemData.sizes?.length > 0 ? itemData.sizes[0].name : undefined),
-      quantity: item.quantity || 1,
-      note: item.note || '',
-    });
+    const existingIndex = selectedItems.findIndex((i) => i.id === itemToAdd.id);
+    if (existingIndex > -1) {
+      const updatedItems = [...selectedItems];
+      updatedItems[existingIndex].quantity += 1;
+      setSelectedItems(updatedItems);
+    } else {
+      setSelectedItems([...selectedItems, itemToAdd]);
+    }
 
-    setIsModalVisible(true);
+    toast.success(`Đã thêm ${itemToAdd.name} vào giỏ hàng!`);
   };
 
-  const createOrder = async () => {
-    if (!tableId) {
-      toast.error('Không tìm thấy ID bàn');
-      return;
-    }
-
-    if (selectedItems.length === 0) {
-      toast.error('Giỏ hàng trống, vui lòng thêm món');
-      return;
-    }
-
-    const currentTime = new Date();
-    const endTime = new Date(currentTime.getTime() + 2 * 60 * 60 * 1000); // +2 giờ
-
-    const payload = {
-      start_time: currentTime.toISOString(),
-      end_time: endTime.toISOString(),
-      tables: [tableId],
-      items: selectedItems.map((item) => ({
-        id: item.id,
-        quantity: item.quantity,
-        size: item.size || undefined,
-        note: item.note || undefined,
-      })),
-      status: 'pending',
-      payment_method: 'cash',
-    };
-
-    try {
-      console.log('Creating order with payload:', payload); // Debugging
-      const response = await orderAPI.createTableOrder(payload);
-      toast.success('Đặt hàng thành công!');
-      setSelectedItems([]); // Xóa giỏ hàng sau khi đặt hàng
-      form.resetFields();
-    } catch (error) {
-      console.error('Error creating order:', error);
-      toast.error('Không thể đặt hàng, vui lòng thử lại');
+  const updateItemQuantity = (index, newQuantity) => {
+    if (newQuantity >= 1) {
+      const updatedItems = [...selectedItems];
+      updatedItems[index].quantity = newQuantity;
+      setSelectedItems(updatedItems);
     }
   };
 
-  const closeModal = () => {
-    setIsModalVisible(false);
+  const closeItemModal = () => {
+    setIsItemModalVisible(false);
     setSelectedItem(null);
-    form.resetFields();
+    setEditItemIndex(null);
+    reset();
   };
 
-  const clearCart = () => {
-    setSelectedItems([]);
-    toast.success('Đã xóa giỏ hàng');
+  const openCartModal = () => {
+    setIsCartModalVisible(true);
+  };
+
+  const closeCartModal = () => {
+    setIsCartModalVisible(false);
   };
 
   useEffect(() => {
     if (tableId) {
       fetchMenuItems();
       fetchCategories();
+      fetchTableStatus();
     } else {
-      message.error('Vui lòng truy cập qua đường dẫn hợp lệ với ID bàn');
+      toast.error("Vui lòng truy cập qua đường dẫn hợp lệ với ID bàn");
     }
   }, [tableId, fetchMenuItems]);
 
@@ -213,21 +225,28 @@ const MenuViewModel = () => {
     menuItems,
     categories,
     selectedItems,
+    setSelectedItems,
     loading,
     filterCategory,
     searchTerm,
-    isModalVisible,
+    isItemModalVisible,
+    isCartModalVisible,
     selectedItem,
     tableId,
-    form,
+    tableStatus,
+    orderId,
+    control,
+    handleSubmit: handleSubmit(addToCart),
+    reset,
     search,
     filterByCategory,
-    addItem,
     showItemDetails,
-    incrementItem,
-    closeModal,
-    clearCart,
-    createOrder,
+    incrementItem: (item) =>
+      item.sizes.length > 0 ? showItemDetails(item) : addItemDirectly(item),
+    updateItemQuantity,
+    closeItemModal,
+    openCartModal,
+    closeCartModal,
   };
 };
 
