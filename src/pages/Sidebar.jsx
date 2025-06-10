@@ -1,13 +1,6 @@
-import React from "react";
-import {
-  Box,
-  Typography,
-  List,
-  ListItem,
-  ListItemButton,
-  ListItemText,
-  Divider,
-} from "@mui/material";
+"use client";
+import { Box, List, ListItem, ListItemButton, Divider, Typography  } from "@mui/material";
+import { Category, GridView } from "@mui/icons-material";
 import { useAppleStyles } from "../theme/theme-hooks.js";
 
 const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
@@ -15,136 +8,101 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
 
   return (
     <Box
-      sx={{
-        // Giảm width để tối ưu không gian
-        width: { 
-          xs: styles.spacing(18), // Giảm từ 20 về 18 (72px)
-          sm: styles.spacing(22)  // Giảm từ 24 về 22 (88px)
-        },
-        background: styles.colors.background.paper,
-        boxShadow: styles.shadow("sm"),
-        minHeight: "100vh",
-        // Giảm padding để tối ưu không gian
-        p: { 
-          xs: styles.spacing(1), // Giảm từ 1 về 0.5
-          sm: styles.spacing(1)    // Giảm từ 2 về 1
-        },
-        overflowY: "auto",
-        position: "sticky",
-        top: 0,
-        zIndex: 1,
+  sx={{
+         width: { xs: "25%", sm: "25%" },
+        background: styles.gradients.light,
+        boxShadow: styles.shadows.card,
+        p: { xs: styles.spacing(1), sm: styles.spacing(3) },
+        pt: styles.spacing(2), // Thêm padding-top nhỏ cho thẩm mỹ
+        position: "fixed", // Cố định Sidebar
+         top: { xs: styles.spacing(14), sm: styles.spacing(20), md: styles.spacing(24) }, // Khớp chính xác với chiều cao Header
+        left: 0,
+        height: "100vh", // Chiếm toàn bộ chiều cao viewport
+        zIndex: 10,
+        borderRight: `1px solid ${styles.colors.neutral[200]}`,
+        boxSizing: "border-box",
       }}
-    >
-      <Typography
-        variant="h6"
+>
+      {/* Header */}
+      <Box
         sx={{
-          fontWeight: styles.typography.fontWeight.semibold,
-          fontSize: { 
-            xs: styles.typography.fontSize.sm, // Giảm từ base về sm
-            sm: styles.typography.fontSize.base // Giảm từ lg về base
-          },
-          color: styles.colors.text.primary,
-          mb: styles.spacing(1.5), // Giảm margin bottom
-          pl: styles.spacing(0.5), // Giảm padding left
-          // Cho phép xuống dòng thay vì cắt
-          overflow: "visible",
-          textOverflow: "unset",
-          whiteSpace: "normal",
-          wordWrap: "break-word",
-          lineHeight: 1.2,
+          ...styles.components.header.primary,
+          mb: styles.spacing(2),
+          p: { xs: styles.spacing(1), sm: styles.spacing(3) },
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
         }}
       >
-        Danh mục
-      </Typography>
-      <Divider sx={{ mb: styles.spacing(1.5) }} />
+        <Box sx={styles.components.iconContainer.glass}>
+          <Category sx={{ fontSize: 12, color: styles.colors.white }} />
+        </Box>
+      </Box>
+
       <List sx={{ p: 0 }}>
-        <ListItem disablePadding sx={{ mb: styles.spacing(0.25) }}>
+        {/* Tất cả */}
+        <ListItem disablePadding sx={{ mb: styles.spacing(1) }}>
           <ListItemButton
             selected={filterCategory === "all"}
             onClick={() => handleFilterByCategory("all")}
             sx={{
-              borderRadius: styles.borderRadius.sm,
-              py: styles.spacing(1), // Giảm padding vertical
-              px: styles.spacing(1), // Giảm padding horizontal
-              minHeight: 40, // Giảm chiều cao tối thiểu
-              "&.Mui-selected": {
-                background: styles.gradients.primary,
-                color: styles.colors.white,
-                "&:hover": {
-                  background: styles.colors.primary.dark,
-                },
-              },
+              borderRadius: styles.borderRadius.lg,
+              py: styles.spacing(1.5),
+              px: { xs: styles.spacing(2), sm: styles.spacing(3) },
+              minHeight: { xs: 40, sm: 48 },
+              background: filterCategory === "all" ? styles.gradients.primary : "transparent",
+              color: filterCategory === "all" ? styles.colors.white : styles.colors.text.primary,
+              transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
               "&:hover": {
-                background: styles.colors.primary[50],
+                background: filterCategory === "all" ? styles.gradients.primary : styles.colors.primary[50],
+                transform: "translateX(4px)",
+                boxShadow: filterCategory === "all" ? styles.shadows.button : styles.shadows.sm,
               },
             }}
           >
-            <ListItemText
-              primary={
-                <Typography
-                  sx={{
-                    fontWeight: styles.typography.fontWeight.medium,
-                    fontSize: { 
-                      xs: styles.typography.fontSize.xs, // Giảm size
-                      sm: styles.typography.fontSize.sm  // Giảm size
-                    },
-                    // Cho phép xuống dòng
-                    overflow: "visible",
-                    textOverflow: "unset",
-                    whiteSpace: "normal",
-                    wordWrap: "break-word",
-                    lineHeight: 1.3,
-                  }}
-                >
-                  Tất cả
-                </Typography>
-              }
-            />
+            <Box sx={{ display: "flex", alignItems: "center", justifyContent: "center", width: "100%" }}>
+              <GridView sx={{ fontSize: 16 }} />
+            </Box>
           </ListItemButton>
         </ListItem>
+
+        <Divider sx={{ my: styles.spacing(1.5), opacity: 0.3 }} />
+
+        {/* Categories */}
         {categories.map((category) => (
-          <ListItem key={category._id} disablePadding sx={{ mb: styles.spacing(0.25) }}>
+          <ListItem key={category._id} disablePadding sx={{ mb: styles.spacing(1) }}>
             <ListItemButton
               selected={filterCategory === category._id}
               onClick={() => handleFilterByCategory(category._id)}
               sx={{
-                borderRadius: styles.borderRadius.sm,
-                py: styles.spacing(1),
-                px: styles.spacing(1),
-                minHeight: 40,
-                "&.Mui-selected": {
-                  background: styles.gradients.primary,
-                  color: styles.colors.white,
-                  "&:hover": {
-                    background: styles.colors.primary.dark,
-                  },
-                },
+                borderRadius: styles.borderRadius.lg,
+                py: styles.spacing(1.5),
+                px: { xs: styles.spacing(2), sm: styles.spacing(3) },
+                 minHeight: { xs: 50, sm: 60 },
+        maxHeight: { xs: 50, sm: 60 },
+                background: filterCategory === category._id ? styles.gradients.primary : "transparent",
+                color: filterCategory === category._id ? styles.colors.white : styles.colors.text.primary,
+                transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
                 "&:hover": {
-                  background: styles.colors.primary[50],
+                  background: filterCategory === category._id ? styles.gradients.primary : styles.colors.primary[50],
+                  transform: "translateX(4px)",
+                  boxShadow: filterCategory === "all" ? styles.shadows.button : styles.shadows.sm,
                 },
               }}
             >
-              <ListItemText
-                primary={
-                  <Typography
-                    sx={{
-                      fontWeight: styles.typography.fontWeight.medium,
-                      fontSize: { 
-                        xs: styles.typography.fontSize.xs,
-                        sm: styles.typography.fontSize.sm
-                      },
-                      // Cho phép xuống dòng thay vì cắt
-                      overflow: "visible",
-                      textOverflow: "unset",
-                      whiteSpace: "normal",
-                      wordWrap: "break-word",
-                      lineHeight: 1.3,
-                    }}
-                  >
-                    {category.name}
-                  </Typography>
-                }
-              />
+              <Box sx={{ display: "flex", alignItems: "center", gap: styles.spacing(1.5), width: "100%" }}>
+                
+                <Typography
+                  sx={{
+                    fontWeight: styles.typography.fontWeight.medium,
+                    fontSize: styles.typography.fontSize.sm,
+                    whiteSpace: "normal",
+                    color: filterCategory === category._id ? styles.colors.white : styles.colors.text.primary,
+                  }}
+                >
+                  {category.name}
+                </Typography>
+              </Box>
             </ListItemButton>
           </ListItem>
         ))}

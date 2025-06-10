@@ -49,9 +49,8 @@ const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }
             <Grid item xs={6} sm={4} md={3} key={item._id}>
               <Card
                 sx={{
-                  width: "100%",
-                  maxWidth: 160, // Giảm kích thước để hiển thị 2 cột trên xs
-                  minHeight: 260, // Giảm chiều cao để gọn hơn
+                  width: 120,
+                  height: 200, // Giảm chiều cao để gọn hơn
                   display: "flex",
                   flexDirection: "column",
                   cursor: "pointer",
@@ -301,7 +300,7 @@ const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }
               </Typography>
             )}
           </DialogContent>
-          <DialogActions sx={{ px: styles.spacing(3), pb: styles.spacing(2) }}>
+          <DialogActions sx={{ px: styles.spacing(2), pb: styles.spacing(2) }}>
             <Button
               onClick={handleCloseDetailModal}
               sx={{
@@ -310,6 +309,8 @@ const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }
                   xs: styles.typography.fontSize.sm,
                   sm: styles.typography.fontSize.base,
                 },
+                px: styles.spacing(6), // Giảm padding nút
+                        py: styles.spacing(2),
               }}
             >
               Đóng

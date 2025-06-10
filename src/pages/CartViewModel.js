@@ -4,12 +4,6 @@ import { orderAPI } from "../services/apis/Order";
 const CartViewModel = (selectedItems, onItemUpdate, orderId) => {
   const tableId = localStorage.getItem("tableId");
 
-  const handleClearCart = () => {
-    selectedItems.length = 0;
-    onItemUpdate([...selectedItems]);
-    toast.success("Đã xóa giỏ hàng");
-  };
-
   const updateItemQuantity = (index, newQuantity) => {
     if (newQuantity >= 1) {
       selectedItems[index].quantity = newQuantity;
@@ -75,7 +69,6 @@ const CartViewModel = (selectedItems, onItemUpdate, orderId) => {
   };
 
   return {
-    handleClearCart,
     createOrder,
     updateItemQuantity,
     removeItem,

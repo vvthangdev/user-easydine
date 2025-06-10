@@ -25,9 +25,7 @@ const Menu = () => {
     isItemModalVisible,
     isCartModalVisible,
     selectedItem,
-    tableId,
-    tableStatus,
-    orderId,
+    tableInfo,
     control,
     handleSubmit,
     reset,
@@ -55,24 +53,18 @@ const Menu = () => {
         display: "flex",
         flexDirection: "column",
         minHeight: "100vh",
-        background: styles.gradients.light,
+        background: styles.gradientBg("light"),
       }}
     >
       <Header
-        tableId={tableId}
+        tableInfo={tableInfo}
         searchTerm={searchTerm}
         handleSearch={search}
         selectedItems={selectedItems}
         onCartClick={openCartModal}
         onHistoryClick={openHistoryModal}
       />
-      <Box
-        sx={{
-          display: "flex",
-          flexGrow: 1,
-          minHeight: 0,
-        }}
-      >
+      <Box sx={{ display: "flex", flexGrow: 1, minHeight: 0 }}>
         {categories && (
           <Sidebar
             categories={categories}
@@ -83,13 +75,15 @@ const Menu = () => {
         <Box
           sx={{
             flexGrow: 1,
-            width: "80%", // 80% chiều rộng
+            width: { xs: "75%", sm: "75%" }, // Đảm bảo chiếm phần còn lại
+            ml: { xs: "25%", sm: "25%" }, // Tạo khoảng cách bên trái để tránh bị Sidebar che
             pt: styles.spacing(2),
             pb: styles.spacing(12),
             px: { xs: styles.spacing(2), sm: styles.spacing(4) },
+            overflowY: "auto", // Chỉ phần này cuộn
           }}
         >
-          {tableId ? (
+          {tableInfo ? (
             <MenuItemsDisplay
               menuItems={menuItems}
               loading={loading}
@@ -127,7 +121,7 @@ const Menu = () => {
         onClose={closeCartModal}
         PaperProps={{
           sx: {
-            borderRadius: styles.borderRadius.modal,
+            borderRadius: styles.rounded("modal"),
             boxShadow: styles.shadow("2xl"),
             background: styles.colors.background.paper,
             maxWidth: "90vw",
@@ -137,7 +131,7 @@ const Menu = () => {
       >
         <DialogTitle
           sx={{
-            background: styles.gradients.primary,
+            background: styles.gradientBg("primary"),
             color: styles.colors.white,
             fontWeight: styles.typography.fontWeight.semibold,
           }}
@@ -149,13 +143,13 @@ const Menu = () => {
             selectedItems={selectedItems}
             onItemUpdate={setSelectedItems}
             onShowDetails={showItemDetails}
-            orderId={orderId}
+            orderId={tableInfo?.reservation_id}
           />
         </DialogContent>
       </Dialog>
 
       <OrderHistory
-        tableId={tableId}
+        tableId={tableInfo?.table_id}
         open={isHistoryModalVisible}
         onClose={closeHistoryModal}
       />

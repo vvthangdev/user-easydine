@@ -13,6 +13,7 @@ import {
   DialogTitle,
   DialogContent,
   Button,
+  Grid,
 } from "@mui/material";
 import { useAppleStyles } from "../theme/theme-hooks.js";
 import { orderAPI } from "../services/apis/Order";
@@ -53,8 +54,8 @@ const OrderHistory = ({ tableId, open, onClose }) => {
     <Dialog
       open={open}
       onClose={onClose}
-      PaperProps={{
-        sx: {
+      sx={{
+        "& .MuiDialog-paper": {
           borderRadius: styles.rounded("modal"),
           boxShadow: styles.shadow("2xl"),
           background: styles.colors.background.paper,
@@ -65,10 +66,11 @@ const OrderHistory = ({ tableId, open, onClose }) => {
     >
       <DialogTitle
         sx={{
-          background: styles.gradients.primary,
+          background: styles.gradientBg("primary"),
           color: styles.colors.white,
           fontWeight: styles.typography.fontWeight.semibold,
           fontSize: styles.typography.fontSize.xl,
+          padding: styles.spacing(3),
         }}
       >
         Lịch sử đặt hàng
@@ -129,23 +131,19 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                   mb: styles.spacing(4),
                   ...styles.card("main"),
                   p: styles.spacing(4),
+                  transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
+                  "&:hover": {
+                    transform: "translateY(-4px)",
+                    boxShadow: styles.shadow("hover"),
+                  },
                 }}
               >
-                <Typography
-                  variant="h6"
-                  sx={{
-                    fontWeight: styles.typography.fontWeight.bold,
-                    fontSize: styles.typography.fontSize.lg,
-                    color: styles.colors.text.primary,
-                  }}
-                >
-                  Đơn hàng #{orderData.order.id}
-                </Typography>
                 <Typography
                   variant="body2"
                   sx={{
                     color: styles.colors.text.secondary,
-                    mb: styles.spacing(2),
+                    mb: styles.spacing(1),
+                    fontSize: styles.typography.fontSize.sm,
                   }}
                 >
                   Thời gian:{" "}
@@ -155,7 +153,8 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                   variant="body2"
                   sx={{
                     color: styles.colors.text.secondary,
-                    mb: styles.spacing(2),
+                    mb: styles.spacing(1),
+                    fontSize: styles.typography.fontSize.sm,
                   }}
                 >
                   Bàn: {orderData.reservedTables[0]?.table_number} (
@@ -166,6 +165,7 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                   sx={{
                     color: styles.colors.text.secondary,
                     mb: styles.spacing(2),
+                    fontSize: styles.typography.fontSize.sm,
                   }}
                 >
                   Trạng thái:{" "}
@@ -179,6 +179,7 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                   sx={{
                     fontWeight: styles.typography.fontWeight.semibold,
                     color: styles.colors.text.primary,
+                    mb: styles.spacing(2),
                   }}
                 >
                   Món ăn:
@@ -188,33 +189,64 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                     <ListItem
                       key={i}
                       sx={{
-                        py: styles.spacing(1),
+                        py: styles.spacing(2),
+                        px: styles.spacing(1),
                         borderRadius: styles.rounded("sm"),
+                        transition: "all 0.2s ease",
+                        "&:hover": {
+                          backgroundColor: styles.colors.background.light,
+                          transform: "scale(1.01)",
+                        },
                       }}
                     >
-                      <ListItemText
-                        primary={
-                          <Typography
+                      <Grid container spacing={2} alignItems="center">
+                        <Grid item xs={12} sm={3}>
+                          <Box
+                            component="img"
+                            src={item.itemImage}
+                            alt={item.itemName}
                             sx={{
-                              fontWeight: styles.typography.fontWeight.medium,
-                              fontSize: styles.typography.fontSize.base,
+                              width: "100%",
+                              maxWidth: { xs: "100px", sm: "120px" },
+                              height: "auto",
+                              borderRadius: styles.rounded("sm"),
+                              objectFit: "cover",
+                              boxShadow: styles.shadow("xs"),
+                              transition: "all 0.3s ease",
+                              "&:hover": {
+                                boxShadow: styles.shadow("sm"),
+                              },
                             }}
-                          >
-                            {item.itemName} {item.size ? `(${item.size})` : ""}
-                          </Typography>
-                        }
-                        secondary={
-                          <Typography
-                            sx={{
-                              color: styles.colors.text.secondary,
-                              fontSize: styles.typography.fontSize.sm,
-                            }}
-                          >
-                            Số lượng: {item.quantity} | Ghi chú: {item.note || "Không có"} | Giá:{" "}
-                            {(item.itemPrice * item.quantity).toLocaleString()} VNĐ
-                          </Typography>
-                        }
-                      />
+                          />
+                        </Grid>
+                        <Grid item xs={12} sm={9}>
+                          <ListItemText
+                            primary={
+                              <Typography
+                                sx={{
+                                  fontWeight: styles.typography.fontWeight.medium,
+                                  fontSize: styles.typography.fontSize.base,
+                                  color: styles.colors.text.primary,
+                                }}
+                              >
+                                {item.itemName} {item.size ? `(${item.size})` : ""}
+                              </Typography>
+                            }
+                            secondary={
+                              <Typography
+                                sx={{
+                                  color: styles.colors.text.secondary,
+                                  fontSize: styles.typography.fontSize.sm,
+                                  mt: styles.spacing(0.5),
+                                }}
+                              >
+                                Số lượng: {item.quantity} | Ghi chú: {item.note || "Không có"} | Giá:{" "}
+                                {(item.itemPrice * item.quantity).toLocaleString("vi-VN")} VNĐ
+                              </Typography>
+                            }
+                          />
+                        </Grid>
+                      </Grid>
                     </ListItem>
                   ))}
                 </List>
@@ -224,9 +256,10 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                   sx={{
                     fontWeight: styles.typography.fontWeight.bold,
                     color: styles.colors.text.primary,
+                    fontSize: styles.typography.fontSize.lg,
                   }}
                 >
-                  Tổng cộng: {orderData.order.final_amount.toLocaleString()} VNĐ
+                  Tổng cộng: {orderData.order.final_amount.toLocaleString("vi-VN")} VNĐ
                 </Typography>
               </Box>
             ))}

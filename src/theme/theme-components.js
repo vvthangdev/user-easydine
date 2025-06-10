@@ -72,7 +72,7 @@ export const appleComponentStyles = {
       padding: `${appleSpacing[3]} ${appleSpacing[6]}`,
       fontWeight: 600,
       textTransform: "none",
-      border: `2px solid ${appleColors.primary.main}`,
+      border: `1px solid ${appleColors.primary.main}`,
       transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
       "&:hover": {
         background: appleColors.primary.main,

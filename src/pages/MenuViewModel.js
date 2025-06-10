@@ -16,8 +16,7 @@ const MenuViewModel = () => {
   const [isCartModalVisible, setIsCartModalVisible] = useState(false);
   const [selectedItem, setSelectedItem] = useState(null);
   const [editItemIndex, setEditItemIndex] = useState(null);
-  const [tableStatus, setTableStatus] = useState(null);
-  const [orderId, setOrderId] = useState(null);
+  const [tableInfo, setTableInfo] = useState(null);
   const tableId = localStorage.getItem("tableId");
   const { control, handleSubmit, reset, watch } = useForm({
     defaultValues: { size: "", quantity: 1, note: "" },
@@ -44,17 +43,15 @@ const MenuViewModel = () => {
       const statuses = await tableAPI.getAllTablesStatus();
       const currentTable = statuses.find((table) => table.table_id === tableId);
       if (currentTable) {
-        setTableStatus(currentTable.status);
-        setOrderId(currentTable.status === "Occupied" || currentTable.status === "Reserved" ? currentTable.reservation_id : null);
+        setTableInfo(currentTable);
       } else {
-        setTableStatus("Available");
-        setOrderId(null);
+        setTableInfo(null);
+        toast.error("Không tìm thấy bàn với ID này");
       }
     } catch (error) {
       console.error("Error fetching table status:", error);
       toast.error("Không thể kiểm tra trạng thái bàn");
-      setTableStatus(null);
-      setOrderId(null);
+      setTableInfo(null);
     }
   };
 
@@ -232,9 +229,7 @@ const MenuViewModel = () => {
     isItemModalVisible,
     isCartModalVisible,
     selectedItem,
-    tableId,
-    tableStatus,
-    orderId,
+    tableInfo,
     control,
     handleSubmit: handleSubmit(addToCart),
     reset,
