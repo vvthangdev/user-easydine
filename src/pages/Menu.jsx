@@ -1,14 +1,20 @@
 import React, { useState } from "react";
-import { Box, Typography, Dialog, DialogTitle, DialogContent } from "@mui/material";
+import {
+  Box,
+  Typography,
+  Dialog,
+  DialogTitle,
+  DialogContent,
+} from "@mui/material";
 import { useAppleStyles } from "../theme/theme-hooks.js";
 import MenuViewModel from "./MenuViewModel.js";
-import Sidebar from "./Sidebar.jsx";
-import Header from "./Header.jsx";
+import Sidebar from "../components/Sidebar.jsx";
+import Header from "../components/Header.jsx";
 import MenuItemsDisplay from "./MenuItemsDisplay.jsx";
-import BottomNav from "./BottomNav.jsx";
-import ItemDetailsModal from "./ItemDetailsModal.jsx";
-import CartView from "./CartView.jsx";
-import OrderHistory from "./OrderHistory.jsx";
+import BottomNav from "../components/BottomNav.jsx";
+import ItemDetailsModal from "../components/ItemDetailsModal.jsx";
+import CartView from "../components/CartView.jsx";
+import OrderHistory from "../components/OrderHistory.jsx";
 
 const Menu = () => {
   const styles = useAppleStyles();

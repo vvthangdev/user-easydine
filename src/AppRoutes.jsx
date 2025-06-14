@@ -1,8 +1,8 @@
-import React from 'react';
-import { Routes, Route } from 'react-router-dom';
-import Menu from './pages/Menu';
-import MainPage from './pages/MainPage';
-import MenuRedirect from './components/MenuRedirect';
+import React from "react";
+import { Routes, Route } from "react-router-dom";
+import Menu from "./pages/Menu";
+import MainPage from "./components/MainPage";
+import MenuRedirect from "./components/MenuRedirect";
 
 function AppRoutes() {
   return (

@@ -16,7 +16,7 @@ import {
   Grid,
 } from "@mui/material";
 import { useAppleStyles } from "../theme/theme-hooks.js";
-import { orderAPI } from "../services/apis/Order";
+import { orderAPI } from "../services/apis/Order.js";
 
 const OrderHistory = ({ tableId, open, onClose }) => {
   const styles = useAppleStyles();
@@ -103,10 +103,7 @@ const OrderHistory = ({ tableId, open, onClose }) => {
             >
               {error}
             </Typography>
-            <Button
-              sx={styles.button("primary")}
-              onClick={fetchOrderHistory}
-            >
+            <Button sx={styles.button("primary")} onClick={fetchOrderHistory}>
               Thử lại
             </Button>
           </Box>
@@ -224,12 +221,14 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                             primary={
                               <Typography
                                 sx={{
-                                  fontWeight: styles.typography.fontWeight.medium,
+                                  fontWeight:
+                                    styles.typography.fontWeight.medium,
                                   fontSize: styles.typography.fontSize.base,
                                   color: styles.colors.text.primary,
                                 }}
                               >
-                                {item.itemName} {item.size ? `(${item.size})` : ""}
+                                {item.itemName}{" "}
+                                {item.size ? `(${item.size})` : ""}
                               </Typography>
                             }
                             secondary={
@@ -240,8 +239,12 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                                   mt: styles.spacing(0.5),
                                 }}
                               >
-                                Số lượng: {item.quantity} | Ghi chú: {item.note || "Không có"} | Giá:{" "}
-                                {(item.itemPrice * item.quantity).toLocaleString("vi-VN")} VNĐ
+                                Số lượng: {item.quantity} | Ghi chú:{" "}
+                                {item.note || "Không có"} | Giá:{" "}
+                                {(
+                                  item.itemPrice * item.quantity
+                                ).toLocaleString("vi-VN")}{" "}
+                                VNĐ
                               </Typography>
                             }
                           />
@@ -259,7 +262,8 @@ const OrderHistory = ({ tableId, open, onClose }) => {
                     fontSize: styles.typography.fontSize.lg,
                   }}
                 >
-                  Tổng cộng: {orderData.order.final_amount.toLocaleString("vi-VN")} VNĐ
+                  Tổng cộng:{" "}
+                  {orderData.order.final_amount.toLocaleString("vi-VN")} VNĐ
                 </Typography>
               </Box>
             ))}

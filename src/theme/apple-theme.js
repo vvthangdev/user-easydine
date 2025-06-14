@@ -48,7 +48,7 @@ export const appleColors = {
   background: {
     default: "#f5f5f7",
     paper: "#ffffff",
-    light: "#fafafa",
+    light: "#ffffff",
   },
 
   // Text colors
@@ -302,27 +302,32 @@ export const createAppleTheme = () => ({
         },
       },
     },
-    MuiTextField: {
-      styleOverrides: {
-        root: {
-          "& .MuiOutlinedInput-root": {
-            borderRadius: appleBorderRadius.input,
-            backgroundColor: appleColors.background.light,
-            transition: "all 0.2s ease",
-            "&:hover": {
-              backgroundColor: appleColors.background.paper,
-            },
-            "&.Mui-focused": {
-              backgroundColor: appleColors.background.paper,
-              "& .MuiOutlinedInput-notchedOutline": {
-                borderColor: appleColors.primary.main,
-                borderWidth: "2px",
-              },
-            },
+   MuiTextField: {
+  styleOverrides: {
+    root: {
+      backgroundColor: appleColors.white, // Đặt background của lớp cha là trắng
+      border: "none", // Loại bỏ border của lớp cha
+      padding: `${appleSpacing[1]}`, // Thêm padding trắng xung quanh
+      "& .MuiOutlinedInput-root": {
+        borderRadius: appleBorderRadius.input,
+        backgroundColor: appleColors.white, // Đặt background vùng nhập text là trắng
+        transition: "all 0.2s ease",
+        "&:hover": {
+          backgroundColor: appleColors.white, // Giữ trắng khi hover
+        },
+        "&.Mui-focused": {
+          backgroundColor: appleColors.white, // Giữ trắng khi focus
+          "& .MuiOutlinedInput-notchedOutline": {
+            border: "none", // Bỏ viền khi focus
           },
+        },
+        "& .MuiOutlinedInput-notchedOutline": {
+          border: "none", // Bỏ viền mặc định
         },
       },
     },
+  },
+},
     MuiChip: {
       styleOverrides: {
         root: {

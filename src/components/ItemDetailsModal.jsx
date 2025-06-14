@@ -105,7 +105,7 @@ const ItemDetailsModal = ({
             render={({ field }) => (
               <TextField
                 {...field}
-                label="Ghi chú"
+                placeholder="Ghi chú"
                 multiline
                 rows={3}
                 fullWidth
