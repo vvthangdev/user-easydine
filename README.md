@@ -54,6 +54,14 @@ npm run dev
 1. Mở trình duyệt, truy cập `http://localhost:3100`.  
 2. Kiểm tra console trình duyệt (F12 > Console) hoặc terminal để xem log lỗi.
 
+## Demo Screenshots
+
+Here are some screenshots showcasing EasyDine's features:
+
+### Order
+![ui-user](https://github.com/user-attachments/assets/7bfb3bf2-4f18-4ddf-91e3-6b8e2cd90d48)
+
+
 ## Lưu Ý
 - **Backend**: Đảm bảo backend EasyDine chạy trước trên `http://localhost:8080`.
 - **Cổng**: Nếu cổng 3100 bị chiếm, kiểm tra `vite.config.js` hoặc terminal để biết cổng khác.
