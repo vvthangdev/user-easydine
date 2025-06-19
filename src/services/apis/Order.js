@@ -43,4 +43,6 @@ export const orderAPI = {
 
   // Hủy món trong đơn hàng
   cancelItems: (data) => axiosInstance.post("/orders/cancel-items", data).then(handleApiResponse),
+
+  sendTableNotification: (tableId) => axiosInstance.get(`/orders/table-notification/${tableId}`).then(handleApiResponse),
 };

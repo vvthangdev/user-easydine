@@ -1,28 +1,54 @@
 "use client";
-import { Box, List, ListItem, ListItemButton, Divider, Typography  } from "@mui/material";
-import { Category, GridView } from "@mui/icons-material";
+import { Box, List, ListItem, ListItemButton, Divider, Typography } from "@mui/material";
+import { Notifications, GridView } from "@mui/icons-material";
 import { useAppleStyles } from "../theme/theme-hooks.js";
+import { orderAPI } from "../services/apis/Order.js"; // Import orderAPI
+import { toast } from "react-toastify"; // Giả sử bạn dùng react-toastify để hiển thị thông báo
 
 const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
   const styles = useAppleStyles();
 
+  // Hàm xử lý khi bấm vào chuông
+  const handleNotificationClick = async () => {
+    try {
+      // Lấy tableId từ localStorage
+      const tableId = localStorage.getItem("tableId"); // Giả sử key là "tableId", bạn có thể thay đổi nếu key khác
+
+      if (!tableId) {
+        toast.error("Không tìm thấy ID bàn trong localStorage");
+        return;
+      }
+
+      // Gọi API sendTableNotification
+      const response = await orderAPI.sendTableNotification(tableId);
+
+      // Hiển thị thông báo thành công
+      toast.success("Gửi thông báo cho bàn thành công!");
+      console.log("Phản hồi từ API:", response);
+    } catch (error) {
+      // Hiển thị thông báo lỗi
+      toast.error("Gửi thông báo thất bại. Vui lòng thử lại.");
+      console.error("Lỗi khi gửi thông báo:", error);
+    }
+  };
+
   return (
     <Box
-  sx={{
-         width: { xs: "25%", sm: "25%" },
+      sx={{
+        width: { xs: "25%", sm: "25%" },
         background: styles.gradients.light,
         boxShadow: styles.shadows.card,
         p: { xs: styles.spacing(1), sm: styles.spacing(3) },
-        pt: styles.spacing(2), // Thêm padding-top nhỏ cho thẩm mỹ
-        position: "fixed", // Cố định Sidebar
-         top: { xs: styles.spacing(14), sm: styles.spacing(20), md: styles.spacing(24) }, // Khớp chính xác với chiều cao Header
+        pt: styles.spacing(2),
+        position: "fixed",
+        top: { xs: styles.spacing(14), sm: styles.spacing(20), md: styles.spacing(24) },
         left: 0,
-        height: "100vh", // Chiếm toàn bộ chiều cao viewport
+        height: "100vh",
         zIndex: 10,
         borderRight: `1px solid ${styles.colors.neutral[200]}`,
         boxSizing: "border-box",
       }}
->
+    >
       {/* Header */}
       <Box
         sx={{
@@ -32,10 +58,12 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
+          cursor: "pointer", // Thêm con trỏ để báo hiệu có thể bấm
         }}
+        onClick={handleNotificationClick} // Thêm sự kiện onClick
       >
         <Box sx={styles.components.iconContainer.glass}>
-          <Category sx={{ fontSize: 12, color: styles.colors.white }} />
+          <Notifications sx={{ fontSize: 12, color: styles.colors.white }} />
         </Box>
       </Box>
 
@@ -78,8 +106,8 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
                 borderRadius: styles.borderRadius.lg,
                 py: styles.spacing(1.5),
                 px: { xs: styles.spacing(2), sm: styles.spacing(3) },
-                 minHeight: { xs: 50, sm: 60 },
-        maxHeight: { xs: 50, sm: 60 },
+                minHeight: { xs: 50, sm: 60 },
+                maxHeight: { xs: 50, sm: 60 },
                 background: filterCategory === category._id ? styles.gradients.primary : "transparent",
                 color: filterCategory === category._id ? styles.colors.white : styles.colors.text.primary,
                 transition: "all 0.3s cubic-bezier(0.4, 0, 0.2, 1)",
@@ -91,7 +119,6 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
               }}
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: styles.spacing(1.5), width: "100%" }}>
-                
                 <Typography
                   sx={{
                     fontWeight: styles.typography.fontWeight.medium,
