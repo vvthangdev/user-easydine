@@ -15,10 +15,12 @@ import BottomNav from "../components/BottomNav.jsx";
 import ItemDetailsModal from "../components/ItemDetailsModal.jsx";
 import CartView from "../components/CartView.jsx";
 import OrderHistory from "../components/OrderHistory.jsx";
+import RatingModal from "../components/RatingModal.jsx";
 
 const Menu = () => {
   const styles = useAppleStyles();
   const [isHistoryModalVisible, setIsHistoryModalVisible] = useState(false);
+  const [isRatingModalVisible, setIsRatingModalVisible] = useState(false);
 
   const {
     menuItems,
@@ -53,6 +55,18 @@ const Menu = () => {
     setIsHistoryModalVisible(false);
   };
 
+  const openRatingModal = () => {
+    setIsRatingModalVisible(true);
+  };
+
+  const closeRatingModal = () => {
+    setIsRatingModalVisible(false);
+  };
+
+  // Lấy rating_pin từ localStorage (giả định lưu sau khi gọi createTableOrder)
+  const ratingPin = localStorage.getItem("ratingPin");
+  console.log(`vvt check table info in menu jsx: `, tableInfo)
+
   return (
     <Box
       sx={{
@@ -76,17 +90,18 @@ const Menu = () => {
             categories={categories}
             filterCategory={filterCategory}
             handleFilterByCategory={filterByCategory}
+            onRateClick={openRatingModal}
           />
         )}
         <Box
           sx={{
             flexGrow: 1,
-            width: { xs: "75%", sm: "75%" }, // Đảm bảo chiếm phần còn lại
-            ml: { xs: "25%", sm: "25%" }, // Tạo khoảng cách bên trái để tránh bị Sidebar che
+            width: { xs: "75%", sm: "75%" },
+            ml: { xs: "25%", sm: "25%" },
             pt: styles.spacing(2),
             pb: styles.spacing(12),
             px: { xs: styles.spacing(2), sm: styles.spacing(4) },
-            overflowY: "auto", // Chỉ phần này cuộn
+            overflowY: "auto",
           }}
         >
           {tableInfo ? (
@@ -150,6 +165,7 @@ const Menu = () => {
             onItemUpdate={setSelectedItems}
             onShowDetails={showItemDetails}
             orderId={tableInfo?.reservation_id}
+            onCloseCart={closeCartModal}
           />
         </DialogContent>
       </Dialog>
@@ -158,6 +174,13 @@ const Menu = () => {
         tableId={tableInfo?.table_id}
         open={isHistoryModalVisible}
         onClose={closeHistoryModal}
+      />
+
+      <RatingModal
+        open={isRatingModalVisible}
+        onClose={closeRatingModal}
+        orderId={tableInfo?.reservation_id}
+        ratingPin={ratingPin}
       />
     </Box>
   );

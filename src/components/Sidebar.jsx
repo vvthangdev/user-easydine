@@ -1,32 +1,24 @@
-"use client";
 import { Box, List, ListItem, ListItemButton, Divider, Typography } from "@mui/material";
-import { Notifications, GridView } from "@mui/icons-material";
+import { Notifications, GridView, Star } from "@mui/icons-material";
 import { useAppleStyles } from "../theme/theme-hooks.js";
-import { orderAPI } from "../services/apis/Order.js"; // Import orderAPI
-import { toast } from "react-toastify"; // Giả sử bạn dùng react-toastify để hiển thị thông báo
+import { orderAPI } from "../services/apis/Order.js";
+import { toast } from "react-toastify";
 
-const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
+const Sidebar = ({ categories, filterCategory, handleFilterByCategory, onRateClick }) => {
   const styles = useAppleStyles();
 
-  // Hàm xử lý khi bấm vào chuông
+  // Hàm xử lý khi bấm vào chuông (gửi thông báo)
   const handleNotificationClick = async () => {
     try {
-      // Lấy tableId từ localStorage
-      const tableId = localStorage.getItem("tableId"); // Giả sử key là "tableId", bạn có thể thay đổi nếu key khác
-
+      const tableId = localStorage.getItem("tableId");
       if (!tableId) {
         toast.error("Không tìm thấy ID bàn trong localStorage");
         return;
       }
-
-      // Gọi API sendTableNotification
       const response = await orderAPI.sendTableNotification(tableId);
-
-      // Hiển thị thông báo thành công
       toast.success("Gửi thông báo cho bàn thành công!");
       console.log("Phản hồi từ API:", response);
     } catch (error) {
-      // Hiển thị thông báo lỗi
       toast.error("Gửi thông báo thất bại. Vui lòng thử lại.");
       console.error("Lỗi khi gửi thông báo:", error);
     }
@@ -49,7 +41,7 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
         boxSizing: "border-box",
       }}
     >
-      {/* Header */}
+      {/* Icon thông báo */}
       <Box
         sx={{
           ...styles.components.header.primary,
@@ -58,9 +50,9 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
           display: "flex",
           alignItems: "center",
           justifyContent: "center",
-          cursor: "pointer", // Thêm con trỏ để báo hiệu có thể bấm
+          cursor: "pointer",
         }}
-        onClick={handleNotificationClick} // Thêm sự kiện onClick
+        onClick={handleNotificationClick}
       >
         <Box sx={styles.components.iconContainer.glass}>
           <Notifications sx={{ fontSize: 12, color: styles.colors.white }} />
@@ -115,8 +107,8 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
                   background: filterCategory === category._id ? styles.gradients.primary : styles.colors.primary[50],
                   transform: "translateX(4px)",
                   boxShadow: filterCategory === "all" ? styles.shadows.button : styles.shadows.sm,
-                },
-              }}
+                }}
+              }
             >
               <Box sx={{ display: "flex", alignItems: "center", gap: styles.spacing(1.5), width: "100%" }}>
                 <Typography
@@ -133,6 +125,25 @@ const Sidebar = ({ categories, filterCategory, handleFilterByCategory }) => {
             </ListItemButton>
           </ListItem>
         ))}
+
+        {/* Icon đánh giá */}
+        <Box
+          sx={{
+            ...styles.components.header.secondary,
+            background: styles.gradients.warning,
+            mt: styles.spacing(2),
+            p: { xs: styles.spacing(1), sm: styles.spacing(3) },
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+            cursor: "pointer",
+          }}
+          onClick={onRateClick}
+        >
+          <Box sx={styles.components.iconContainer.glass}>
+            <Star sx={{ fontSize: 12, color: styles.colors.white }} />
+          </Box>
+        </Box>
       </List>
     </Box>
   );

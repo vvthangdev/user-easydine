@@ -1,7 +1,7 @@
 import { toast } from "react-toastify";
 import { orderAPI } from "../services/apis/Order";
 
-const CartViewModel = (selectedItems, onItemUpdate, orderId) => {
+const CartViewModel = (selectedItems, onItemUpdate, orderId, onCloseCart) => {
   const tableId = localStorage.getItem("tableId");
 
   const updateItemQuantity = (index, newQuantity) => {
@@ -17,7 +17,7 @@ const CartViewModel = (selectedItems, onItemUpdate, orderId) => {
     toast.success("Đã xóa món ăn khỏi giỏ hàng");
   };
 
-  const createOrder = async () => {
+  const createOrder = async (guestInfo = {}) => {
     if (!tableId) {
       toast.error("Không tìm thấy ID bàn");
       return;
@@ -56,12 +56,23 @@ const CartViewModel = (selectedItems, onItemUpdate, orderId) => {
         const endTime = new Date(currentTime.getTime() + 2 * 60 * 60 * 1000);
         payload.start_time = currentTime.toISOString();
         payload.end_time = endTime.toISOString();
+        if (guestInfo && (guestInfo.name || guestInfo.phone || guestInfo.email)) {
+          payload.guest_info = {
+            name: guestInfo.name || undefined,
+            phone: guestInfo.phone || undefined,
+            email: guestInfo.email || undefined,
+          };
+        }
         console.log("Creating order with payload:", payload);
-        await orderAPI.createTableOrder(payload);
+        const response = await orderAPI.createTableOrder(payload);
+        console.log("Response order with payload:", response);
+        localStorage.setItem("ratingPin", response.rating_pin);
         toast.success("Đặt hàng thành công!");
+        
       }
       selectedItems.length = 0;
       onItemUpdate([]);
+      onCloseCart()
     } catch (error) {
       console.error("Error processing order:", error);
       toast.error("Không thể xử lý đơn hàng, vui lòng thử lại");

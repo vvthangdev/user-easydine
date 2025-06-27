@@ -4,6 +4,7 @@ import { toast } from "react-toastify";
 import { debounce } from "lodash";
 import { itemAPI } from "../services/apis/Item";
 import { tableAPI } from "../services/apis/Table";
+import { orderAPI } from "../services/apis/Order";
 
 const MenuViewModel = () => {
   const [menuItems, setMenuItems] = useState([]);
@@ -42,6 +43,7 @@ const MenuViewModel = () => {
     try {
       const statuses = await tableAPI.getAllTablesStatus();
       const currentTable = statuses.find((table) => table.table_id === tableId);
+      console.log(`vt check currentTable: `, currentTable)
       if (currentTable) {
         setTableInfo(currentTable);
       } else {
@@ -208,11 +210,24 @@ const MenuViewModel = () => {
     setIsCartModalVisible(false);
   };
 
+  // const fetchOrderInfo = async () => {
+  //   const orderInfo = await orderAPI.getOrderInfo(localStorage.getItem("tableId"))
+  // }
+  useEffect (() => {
+    if (tableId) {
+      fetchTableStatus()
+      // fetchOrderInfo()
+    } else {
+      toast.error("Mã qr hiện tại chưa hợp lệ")
+    }
+  }, [tableId])
+
   useEffect(() => {
     if (tableId) {
       fetchMenuItems();
       fetchCategories();
-      fetchTableStatus();
+      // fetchTableStatus();
+      // fetchTableInfo();
     } else {
       toast.error("Vui lòng truy cập qua đường dẫn hợp lệ với ID bàn");
     }
