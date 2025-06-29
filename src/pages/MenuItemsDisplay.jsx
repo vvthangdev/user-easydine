@@ -1,4 +1,3 @@
-"use client";
 import React, { useState } from "react";
 import {
   Box,
@@ -18,7 +17,12 @@ import {
 import AddCircleIcon from "@mui/icons-material/AddCircle";
 import { useAppleStyles } from "../theme/theme-hooks.js";
 
-const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }) => {
+const MenuItemsDisplay = ({
+  menuItems,
+  loading,
+  showItemDetails,
+  incrementItem,
+}) => {
   const styles = useAppleStyles();
 
   // State để quản lý modal chi tiết
@@ -40,7 +44,13 @@ const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }
   return (
     <>
       {loading ? (
-        <Box sx={{ display: "flex", justifyContent: "center", my: styles.spacing(8) }}>
+        <Box
+          sx={{
+            display: "flex",
+            justifyContent: "center",
+            my: styles.spacing(8),
+          }}
+        >
           <CircularProgress color="primary" />
         </Box>
       ) : menuItems.length > 0 ? (
@@ -79,7 +89,8 @@ const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }
                   image={item.image}
                   alt={item.name}
                   onError={(e) => {
-                    e.target.src = "https://via.placeholder.com/160x80?text=Image+Not+Found";
+                    e.target.src =
+                      "https://via.placeholder.com/160x80?text=Image+Not+Found";
                   }}
                 />
                 <CardContent
@@ -240,7 +251,10 @@ const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }
                   }}
                 >
                   {selectedItem.sizes
-                    .map((size) => `${size.name} (${size.price.toLocaleString()} VNĐ)`)
+                    .map(
+                      (size) =>
+                        `${size.name} (${size.price.toLocaleString()} VNĐ)`
+                    )
                     .join(", ")}
                 </Typography>
               </Box>
@@ -310,7 +324,7 @@ const MenuItemsDisplay = ({ menuItems, loading, showItemDetails, incrementItem }
                   sm: styles.typography.fontSize.base,
                 },
                 px: styles.spacing(6), // Giảm padding nút
-                        py: styles.spacing(2),
+                py: styles.spacing(2),
               }}
             >
               Đóng
